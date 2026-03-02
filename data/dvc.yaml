@@ -1,0 +1,15 @@
+stages:
+  download_data:
+    cmd: python download_datasets.py
+    deps:
+      - download_datasets.py
+    outs:
+      - real_datasets/
+      
+  generate_synthetic:
+    cmd: python synthetic_generator.py
+    deps:
+      - synthetic_generator.py
+      - augmentation.py
+    outs:
+      - synthetic/

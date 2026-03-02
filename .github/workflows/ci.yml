@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install flake8 black
+      - name: Run lint
+        run: |
+          flake8 api preprocess model nlp
+          black --check api preprocess model nlp
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "requirements.txt not found"
+          pip install pytest pytest-cov
+      - name: Run tests
+        run: pytest tests/ --cov=api --cov=preprocess --cov=model --cov=nlp --cov-fail-under=80
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker compose services
+        run: docker-compose build
+      - name: Verify services start without errors
+        run: |
+          docker-compose up -d
+          # Wait for services to be up
+          sleep 10
+          # Check if container is running or exited with failure
+          if docker-compose ps | grep "Exit \([1-9]\|[0-9]\{2,\}\)"; then docker-compose logs; exit 1; fi
+          docker-compose down
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install bandit
+        run: pip install bandit
+      - name: Run bandit on Python code
+        run: bandit -r api preprocess model nlp
+      - name: Build Docker image for trivy
+        run: docker build -t akshara-api:latest .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'akshara-api:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'

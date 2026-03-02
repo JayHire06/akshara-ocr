@@ -1,0 +1,109 @@
+{
+    "title": "Akshara OCR Metrics",
+    "timezone": "browser",
+    "schemaVersion": 21,
+    "timezone": "browser",
+    "refresh": "5s",
+    "panels": [
+        {
+            "title": "Request Rate (req/sec)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(ocr_requests_total[1m])) by (language)",
+                    "legendFormat": "{{language}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "API Latency (P50/P95/P99)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.99, sum(rate(ocr_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "P99",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(ocr_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "P95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "histogram_quantile(0.50, sum(rate(ocr_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "P50",
+                    "refId": "C"
+                }
+            ]
+        },
+        {
+            "title": "Error Rate (%)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "(sum(rate(ocr_requests_total{status=\"error\"}[1m])) / sum(rate(ocr_requests_total[1m]))) * 100",
+                    "legendFormat": "Error Rate",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "OCR Queue Depth",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "ocr_queue_depth",
+                    "legendFormat": "Queue Depth",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "Model Inference Time",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(model_inference_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "P95 Inference Time",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.50, sum(rate(model_inference_duration_seconds_bucket[1m])) by (le))",
+                    "legendFormat": "P50 Inference Time",
+                    "refId": "B"
+                }
+            ]
+        }
+    ]
+}

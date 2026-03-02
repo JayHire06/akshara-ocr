@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.env
+node_modules/
+frontend/dist/
+*.db
+test.db
+.pytest_cache/
+data/train/
+data/val/
+data/test/
+model/checkpoints/

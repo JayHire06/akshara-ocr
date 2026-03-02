@@ -1,0 +1,26 @@
+FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+
+WORKDIR /workspace
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Assuming requirements.txt is available at root of context
+COPY requirements.txt .
+
+# Install dependencies, emphasizing wandb and dvc for the training pipeline
+RUN pip install --no-cache-dir -r requirements.txt \
+    wandb \
+    dvc \
+    dvc-s3
+
+COPY . /workspace/akshara-ocr
+WORKDIR /workspace/akshara-ocr
+
+CMD ["bash", "infra/training/train_job.sh"]

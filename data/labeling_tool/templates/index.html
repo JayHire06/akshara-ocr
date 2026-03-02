@@ -1,0 +1,38 @@
+<!-- data/labeling_tool/templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Akshara OCR Labeling Tool</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 40px;">
+    <h1>Akshara OCR Data Labeling</h1>
+    <p>Remaining images: {{ remaining }}</p>
+    
+    {% if image %}
+    <div style="margin-top: 20px;">
+        <img src="/images/{{ image }}" alt="Image to label" style="max-height: 200px; border: 1px solid #ccc; margin-bottom: 20px;">
+        <form action="/submit" method="post">
+            <input type="hidden" name="filename" value="{{ image }}">
+            <div>
+                <label>Text:</label><br>
+                <input type="text" name="text" required autofocus style="font-size: 20px; padding: 5px; width: 300px;">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Language:</label><br>
+                <select name="language" required style="font-size: 16px; padding: 5px;">
+                    <option value="hi">Hindi</option>
+                    <option value="ta">Tamil</option>
+                    <option value="bn">Bengali</option>
+                    <option value="gu">Gujarati</option>
+                </select>
+            </div>
+            <div style="margin-top: 15px;">
+                <button type="submit" style="padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; cursor: pointer;">Submit Data</button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <p style="color: green; font-weight: bold;">All done! No more images to label.</p>
+    {% endif %}
+</body>
+</html>

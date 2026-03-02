@@ -1,0 +1,76 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: akshara-api:1.0.0
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - postgres
+      - model-server
+    environment:
+      - DATABASE_URL=postgresql://akshara:akshara_pass@postgres:5432/akshara_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_SERVER_URL=http://model-server:8001/predict
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+  model-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: akshara-model-server:1.0.0
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_PATH=/app/models/akshara_ocr.onnx
+    command: uvicorn api.model_server:app --host 0.0.0.0 --port 8001
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: akshara-celery-worker:1.0.0
+    restart: always
+    depends_on:
+      - api
+      - redis
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://akshara:akshara_pass@postgres:5432/akshara_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - MODEL_SERVER_URL=http://model-server:8001/predict
+    command: celery -A api.tasks.celery_app worker --loglevel=info
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=akshara
+      - POSTGRES_PASSWORD=akshara_pass
+      - POSTGRES_DB=akshara_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  redis_data:
