@@ -1,6 +1,6 @@
 import pytest
 import os
-import jwt
+from jose import jwt
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from api.config import settings
