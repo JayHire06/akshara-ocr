@@ -87,3 +87,49 @@ class NgramLM:
             
         probs.sort(key=lambda x: x[1], reverse=True)
         return probs[:top_k]
+        
+    def save(self, filepath: str):
+        import json
+        
+        # Convert tuple contexts to strings
+        counts_serializable = {}
+        for ctx, tgts in self.counts.items():
+            ctx_str = "|||".join(ctx)
+            counts_serializable[ctx_str] = dict(tgts)
+            
+        context_counts_serializable = {
+            "|||".join(ctx): count 
+            for ctx, count in self.context_counts.items()
+        }
+        
+        data = {
+            "n": self.n,
+            "level": self.level,
+            "k": self.k,
+            "vocab": list(self.vocab),
+            "counts": counts_serializable,
+            "context_counts": context_counts_serializable
+        }
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f)
+            
+    def load(self, filepath: str):
+        import json
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        self.n = data["n"]
+        self.level = data["level"]
+        self.k = data["k"]
+        self.vocab = set(data["vocab"])
+        
+        self.counts = defaultdict(lambda: defaultdict(int))
+        for ctx_str, tgts in data["counts"].items():
+            ctx = tuple(ctx_str.split("|||")) if ctx_str else ()
+            self.counts[ctx].update(tgts)
+            
+        self.context_counts = defaultdict(int)
+        for ctx_str, count in data["context_counts"].items():
+            ctx = tuple(ctx_str.split("|||")) if ctx_str else ()
+            self.context_counts[ctx] = count

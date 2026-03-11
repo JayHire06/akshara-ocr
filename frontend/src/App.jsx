@@ -5,11 +5,14 @@ import ProcessingScreen from './components/ProcessingScreen';
 import ResultsScreen from './components/ResultsScreen';
 import HistoryScreen from './components/HistoryScreen';
 import ErrorScreen from './components/ErrorScreen';
+import AuthScreen from './components/AuthScreen';
+import SettingsScreen from './components/SettingsScreen';
 import { api, setAuthToken } from './services/api';
+import { Settings, LogOut } from 'lucide-react';
 import './index.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState('landing'); // Landing is first
 
   // User State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -49,22 +52,29 @@ function App() {
     if (token) {
       setIsLoggedIn(true);
       setAuthToken(token);
-    } else {
-      // Auto login for test flow
-      api.login('testuser', 'testpass').then(res => {
-        setIsLoggedIn(true);
-        setAuthToken(res.access_token);
-      }).catch(err => console.error('Auto login failed', err));
     }
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    setAuthToken(null);
+    setIsLoggedIn(false);
+    resetFlow();
+    setCurrentView('auth');
+  };
 
   const handleError = (msg) => {
     setErrorMsg(msg);
     setCurrentView('error');
   };
 
+  // === View Handlers ===
   const handleStart = () => {
-    setCurrentView('upload');
+    if (isLoggedIn) {
+      setCurrentView('upload');
+    } else {
+      setCurrentView('auth');
+    }
   };
 
   const handleUploadSubmit = async (file, language) => {
@@ -127,28 +137,34 @@ function App() {
   };
 
   const navigateToHistory = () => setCurrentView('history');
+  const navigateToSettings = () => setCurrentView('settings');
 
   return (
     <div className="app-container">
       {/* Top Header / Navigation could go here */}
       <header className="flex justify-between items-center" style={{ padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>
-        <h2 style={{ color: 'var(--color-accent)', cursor: 'pointer' }} onClick={() => setCurrentView('landing')}>
+        <h2 style={{ color: 'var(--color-accent)', cursor: 'pointer' }} onClick={() => isLoggedIn ? setCurrentView('landing') : null}>
           Akshara OCR
         </h2>
-        {currentView !== 'landing' && (
+        {currentView !== 'auth' && (
           <div className="flex gap-2">
             <button className="btn-secondary" onClick={() => setCurrentView('upload')}>New Extract</button>
             <button className="btn-secondary" onClick={navigateToHistory}>History</button>
+            <button className="btn-secondary" onClick={navigateToSettings} style={{ padding: '8px' }} aria-label="Settings">
+              <Settings size={20} />
+            </button>
           </div>
         )}
       </header>
 
       <main>
         {currentView === 'landing' && <LandingScreen onStart={handleStart} />}
+        {currentView === 'auth' && <AuthScreen onLoginSuccess={() => { setIsLoggedIn(true); setCurrentView('upload'); }} />}
         {currentView === 'upload' && <UploadScreen onUploadSubmit={handleUploadSubmit} />}
         {currentView === 'processing' && <ProcessingScreen onCancel={cancelProcessing} />}
-        {currentView === 'result' && <ResultsScreen result={result} selectedLanguage={selectedLanguage} onBack={resetFlow} />}
+        {currentView === 'result' && <ResultsScreen result={result} selectedLanguage={selectedLanguage} selectedFile={selectedFile} onBack={resetFlow} />}
         {currentView === 'history' && <HistoryScreen />}
+        {currentView === 'settings' && <SettingsScreen onLogout={handleLogout} />}
         {currentView === 'error' && <ErrorScreen message={errorMsg} onRetry={resetFlow} />}
       </main>
     </div>

@@ -1,0 +1,944 @@
+skip: AcadEref.ttf
+HINDI OK: AGENCYB.TTF
+HINDI OK: AGENCYR.TTF
+HINDI OK: AIGDT___.TTF
+HINDI OK: ALGER.TTF
+skip: AMDT_Symbols.ttf
+HINDI OK: Amgdt_IV25.ttf
+HINDI OK: Amgdt_IV50.ttf
+skip: AMGDT___.ttf
+HINDI OK: ANTQUAB.TTF
+HINDI OK: ANTQUABI.TTF
+HINDI OK: ANTQUAI.TTF
+HINDI OK: arial.ttf
+HINDI OK: arialbd.ttf
+HINDI OK: arialbi.ttf
+HINDI OK: ariali.ttf
+HINDI OK: ARIALN.TTF
+HINDI OK: ARIALNB.TTF
+HINDI OK: ARIALNBI.TTF
+HINDI OK: ARIALNI.TTF
+HINDI OK: ARIALUNI.ttf
+HINDI OK: ariblk.ttf
+HINDI OK: ARLRDBD.TTF
+HINDI OK: Artifakt Element Black Italic.ttf
+HINDI OK: Artifakt Element Black.ttf
+HINDI OK: Artifakt Element Bold Italic.ttf
+HINDI OK: Artifakt Element Bold.ttf
+HINDI OK: Artifakt Element Book Italic.ttf
+HINDI OK: Artifakt Element Book.ttf
+HINDI OK: Artifakt Element Hair Italic.ttf
+HINDI OK: Artifakt Element Hair.ttf
+HINDI OK: Artifakt Element Heavy Italic.ttf
+HINDI OK: Artifakt Element Heavy.ttf
+HINDI OK: Artifakt Element Italic.ttf
+HINDI OK: Artifakt Element Light Italic.ttf
+HINDI OK: Artifakt Element LIght.ttf
+HINDI OK: Artifakt Element Medium Italic.ttf
+HINDI OK: Artifakt Element Medium.ttf
+HINDI OK: Artifakt Element Regular.ttf
+HINDI OK: Artifakt Element Thin Italic.ttf
+HINDI OK: Artifakt Element Thin.ttf
+HINDI OK: bahnschrift.ttf
+HINDI OK: BASKVILL.TTF
+HINDI OK: BAUHS93.TTF
+HINDI OK: BELL.TTF
+HINDI OK: BELLB.TTF
+HINDI OK: BELLI.TTF
+HINDI OK: BERNHC.TTF
+HINDI OK: bgothl.ttf
+HINDI OK: bgothm.ttf
+HINDI OK: BKANT.TTF
+HINDI OK: BOD_B.TTF
+HINDI OK: BOD_BI.TTF
+HINDI OK: BOD_BLAI.TTF
+HINDI OK: BOD_BLAR.TTF
+HINDI OK: BOD_CB.TTF
+HINDI OK: BOD_CBI.TTF
+HINDI OK: BOD_CI.TTF
+HINDI OK: BOD_CR.TTF
+HINDI OK: BOD_I.TTF
+HINDI OK: BOD_PSTC.TTF
+HINDI OK: BOD_R.TTF
+HINDI OK: BOOKOS.TTF
+HINDI OK: BOOKOSB.TTF
+HINDI OK: BOOKOSBI.TTF
+HINDI OK: BOOKOSI.TTF
+HINDI OK: BRADHITC.TTF
+HINDI OK: BRITANIC.TTF
+HINDI OK: BRLNSB.TTF
+HINDI OK: BRLNSDB.TTF
+HINDI OK: BRLNSR.TTF
+HINDI OK: BROADW.TTF
+HINDI OK: BRUSHSCI.TTF
+HINDI OK: BSSYM7.TTF
+HINDI OK: calibri.ttf
+HINDI OK: calibrib.ttf
+HINDI OK: calibrii.ttf
+HINDI OK: calibril.ttf
+HINDI OK: calibrili.ttf
+HINDI OK: calibriz.ttf
+HINDI OK: CALIFB.TTF
+HINDI OK: CALIFI.TTF
+HINDI OK: CALIFR.TTF
+HINDI OK: CALIST.TTF
+HINDI OK: CALISTB.TTF
+HINDI OK: CALISTBI.TTF
+HINDI OK: CALISTI.TTF
+HINDI OK: cambriab.ttf
+HINDI OK: cambriai.ttf
+HINDI OK: cambriaz.ttf
+HINDI OK: Candara.ttf
+HINDI OK: Candarab.ttf
+HINDI OK: Candarai.ttf
+HINDI OK: Candaral.ttf
+HINDI OK: Candarali.ttf
+HINDI OK: Candaraz.ttf
+HINDI OK: CASTELAR.TTF
+HINDI OK: CENSCBK.TTF
+HINDI OK: CENTAUR.TTF
+HINDI OK: CENTURY.TTF
+HINDI OK: CHILLER.TTF
+HINDI OK: cityb___.ttf
+HINDI OK: COLONNA.TTF
+HINDI OK: comic.ttf
+HINDI OK: comicbd.ttf
+HINDI OK: comici.ttf
+HINDI OK: comicz.ttf
+HINDI OK: compi.ttf
+HINDI OK: complex_.ttf
+HINDI OK: complex_IV25.ttf
+HINDI OK: complex_IV50.ttf
+HINDI OK: comsc.ttf
+HINDI OK: consola.ttf
+HINDI OK: consolab.ttf
+HINDI OK: consolai.ttf
+HINDI OK: consolaz.ttf
+HINDI OK: constan.ttf
+HINDI OK: constanb.ttf
+HINDI OK: constani.ttf
+HINDI OK: constanz.ttf
+HINDI OK: COOPBL.TTF
+HINDI OK: COPRGTB.TTF
+HINDI OK: COPRGTL.TTF
+HINDI OK: corbel.ttf
+HINDI OK: corbelb.ttf
+HINDI OK: corbeli.ttf
+HINDI OK: corbell.ttf
+HINDI OK: corbelli.ttf
+HINDI OK: corbelz.ttf
+HINDI OK: counb___.ttf
+HINDI OK: cour.ttf
+HINDI OK: courbd.ttf
+HINDI OK: courbi.ttf
+HINDI OK: couri.ttf
+HINDI OK: CURLZ___.TTF
+HINDI OK: DUBAI-BOLD.TTF
+HINDI OK: DUBAI-LIGHT.TTF
+HINDI OK: DUBAI-MEDIUM.TTF
+HINDI OK: DUBAI-REGULAR.TTF
+HINDI OK: dutch.ttf
+HINDI OK: dutchb.ttf
+HINDI OK: dutchbi.ttf
+HINDI OK: dutcheb.ttf
+HINDI OK: dutchi.ttf
+HINDI OK: ebrima.ttf
+HINDI OK: ebrimabd.ttf
+HINDI OK: ELEPHNT.TTF
+HINDI OK: ELEPHNTI.TTF
+HINDI OK: ENGR.TTF
+HINDI OK: ERASBD.TTF
+HINDI OK: ERASDEMI.TTF
+HINDI OK: ERASLGHT.TTF
+HINDI OK: ERASMD.TTF
+HINDI OK: eurro___.ttf
+HINDI OK: eurr____.ttf
+HINDI OK: FELIXTI.TTF
+HINDI OK: FORTE.TTF
+HINDI OK: FRABK.TTF
+HINDI OK: FRABKIT.TTF
+HINDI OK: FRADM.TTF
+HINDI OK: FRADMCN.TTF
+HINDI OK: FRADMIT.TTF
+HINDI OK: FRAHV.TTF
+HINDI OK: FRAHVIT.TTF
+HINDI OK: framd.ttf
+HINDI OK: FRAMDCN.TTF
+HINDI OK: framdit.ttf
+HINDI OK: FREESCPT.TTF
+HINDI OK: FRSCRIPT.TTF
+HINDI OK: FTLTLT.TTF
+HINDI OK: Gabriola.ttf
+HINDI OK: gadugi.ttf
+HINDI OK: gadugib.ttf
+HINDI OK: GARA.TTF
+HINDI OK: GARABD.TTF
+HINDI OK: GARAIT.TTF
+HINDI OK: gdt_IV25.ttf
+HINDI OK: gdt_IV50.ttf
+HINDI OK: gdt_____.ttf
+skip: GENISO.ttf
+HINDI OK: georgia.ttf
+HINDI OK: georgiab.ttf
+HINDI OK: georgiai.ttf
+HINDI OK: georgiaz.ttf
+HINDI OK: GIGI.TTF
+HINDI OK: GILBI___.TTF
+HINDI OK: GILB____.TTF
+HINDI OK: GILC____.TTF
+HINDI OK: GILI____.TTF
+HINDI OK: GILLUBCD.TTF
+HINDI OK: GILSANUB.TTF
+HINDI OK: GIL_____.TTF
+HINDI OK: GLECB.TTF
+HINDI OK: GLSNECB.TTF
+skip: GOST Common Italic.ttf
+HINDI OK: GOST Common.ttf
+HINDI OK: GOTHIC.TTF
+HINDI OK: GOTHICB.TTF
+HINDI OK: GOTHICBI.TTF
+HINDI OK: gothice_.ttf
+HINDI OK: gothicg_.ttf
+HINDI OK: GOTHICI.TTF
+HINDI OK: gothici_.ttf
+HINDI OK: GOUDOS.TTF
+HINDI OK: GOUDOSB.TTF
+HINDI OK: GOUDOSI.TTF
+HINDI OK: GOUDYSTO.TTF
+HINDI OK: greekc_IV25.ttf
+HINDI OK: greekc_IV50.ttf
+HINDI OK: greekc__.ttf
+HINDI OK: greeks_IV25.ttf
+HINDI OK: greeks_IV50.ttf
+HINDI OK: greeks__.ttf
+HINDI OK: HARLOWSI.TTF
+HINDI OK: HARNGTON.TTF
+HINDI OK: HATTEN.TTF
+HINDI OK: himalaya.ttf
+HINDI OK: HTOWERT.TTF
+HINDI OK: HTOWERTI.TTF
+HINDI OK: impact.ttf
+HINDI OK: IMPRISHA.TTF
+HINDI OK: INFROMAN.TTF
+HINDI OK: Inkfree.ttf
+skip: isocp2_IV25.ttf
+skip: isocp2_IV50.ttf
+skip: isocp2__.ttf
+skip: isocp3_IV25.ttf
+skip: isocp3_IV50.ttf
+skip: isocp3__.ttf
+skip: isocpeui.ttf
+HINDI OK: isocpeur.ttf
+skip: isocp_IV25.ttf
+skip: isocp_IV50.ttf
+skip: isocp___.ttf
+skip: isoct2_IV25.ttf
+skip: isoct2_IV50.ttf
+skip: isoct2__.ttf
+skip: isoct3_IV25.ttf
+skip: isoct3_IV50.ttf
+skip: isoct3__.ttf
+skip: isocteui.ttf
+skip: isocteur.ttf
+skip: isoct_IV25.ttf
+skip: isoct_IV50.ttf
+skip: isoct___.ttf
+HINDI OK: italicc_.ttf
+HINDI OK: italict_.ttf
+HINDI OK: italic_IV25.ttf
+HINDI OK: italic_IV50.ttf
+HINDI OK: italic__.ttf
+HINDI OK: ITCBLKAD.TTF
+HINDI OK: ITCEDSCR.TTF
+HINDI OK: ITCKRIST.TTF
+HINDI OK: javatext.ttf
+HINDI OK: JOKERMAN.TTF
+HINDI OK: JUICE___.TTF
+HINDI OK: KUNSTLER.TTF
+HINDI OK: LATINWD.TTF
+HINDI OK: LBRITE.TTF
+HINDI OK: LBRITED.TTF
+HINDI OK: LBRITEDI.TTF
+HINDI OK: LBRITEI.TTF
+HINDI OK: LCALLIG.TTF
+HINDI OK: LeelaUIb.ttf
+HINDI OK: LeelawUI.ttf
+HINDI OK: LeelUIsl.ttf
+HINDI OK: LFAX.TTF
+HINDI OK: LFAXD.TTF
+HINDI OK: LFAXDI.TTF
+HINDI OK: LFAXI.TTF
+HINDI OK: LHANDW.TTF
+HINDI OK: LSANS.TTF
+HINDI OK: LSANSD.TTF
+HINDI OK: LSANSDI.TTF
+HINDI OK: LSANSI.TTF
+HINDI OK: LTYPE.TTF
+HINDI OK: LTYPEB.TTF
+HINDI OK: LTYPEBO.TTF
+HINDI OK: LTYPEO.TTF
+HINDI OK: lucon.ttf
+HINDI OK: l_10646.ttf
+HINDI OK: MAGNETOB.TTF
+HINDI OK: MAIAN.TTF
+HINDI OK: malgun.ttf
+HINDI OK: malgunbd.ttf
+HINDI OK: malgunsl.ttf
+HINDI OK: marlett.ttf
+HINDI OK: MATURASC.TTF
+HINDI OK: micross.ttf
+HINDI OK: MISTRAL.TTF
+HINDI OK: mmrtext.ttf
+HINDI OK: mmrtextb.ttf
+HINDI OK: MOD20.TTF
+HINDI OK: monbaiti.ttf
+HINDI OK: monos.ttf
+HINDI OK: monosb.ttf
+HINDI OK: monosbi.ttf
+HINDI OK: monosi.ttf
+HINDI OK: monotxt_.ttf
+HINDI OK: monotxt_IV25.ttf
+HINDI OK: monotxt_IV50.ttf
+HINDI OK: msyi.ttf
+HINDI OK: MTCORSVA.TTF
+HINDI OK: MTEXTRA.TTF
+HINDI OK: mtproxy1.ttf
+HINDI OK: mtproxy2.ttf
+HINDI OK: mtproxy3.ttf
+HINDI OK: mtproxy4.ttf
+HINDI OK: mtproxy5.ttf
+HINDI OK: mtproxy6.ttf
+HINDI OK: mtproxy7.ttf
+HINDI OK: mtproxy8.ttf
+HINDI OK: mtproxy9.ttf
+HINDI OK: mvboli.ttf
+HINDI OK: NIAGENG.TTF
+HINDI OK: NIAGSOL.TTF
+HINDI OK: ntailu.ttf
+HINDI OK: ntailub.ttf
+HINDI OK: OCRAEXT.TTF
+HINDI OK: OLDENGL.TTF
+HINDI OK: ONYX.TTF
+HINDI OK: OUTLOOK.TTF
+HINDI OK: pala.ttf
+HINDI OK: palab.ttf
+HINDI OK: palabi.ttf
+HINDI OK: palai.ttf
+HINDI OK: PALSCRI.TTF
+HINDI OK: panroman.ttf
+HINDI OK: PAPYRUS.TTF
+HINDI OK: PARCHM.TTF
+HINDI OK: PERBI___.TTF
+HINDI OK: PERB____.TTF
+HINDI OK: PERI____.TTF
+HINDI OK: PERTIBD.TTF
+HINDI OK: PERTILI.TTF
+HINDI OK: PER_____.TTF
+HINDI OK: phagspa.ttf
+HINDI OK: phagspab.ttf
+HINDI OK: PLAYBILL.TTF
+HINDI OK: POORICH.TTF
+HINDI OK: PRISTINA.TTF
+HINDI OK: RAGE.TTF
+HINDI OK: RAVIE.TTF
+HINDI OK: REFSAN.TTF
+HINDI OK: REFSPCL.TTF
+HINDI OK: ROCCB___.TTF
+HINDI OK: ROCC____.TTF
+HINDI OK: ROCK.TTF
+HINDI OK: ROCKB.TTF
+HINDI OK: ROCKBI.TTF
+HINDI OK: ROCKEB.TTF
+HINDI OK: ROCKI.TTF
+HINDI OK: romab___.ttf
+HINDI OK: romai___.ttf
+HINDI OK: romanc__.ttf
+HINDI OK: romand__.ttf
+skip: romans_IV25.ttf
+skip: romans_IV50.ttf
+skip: romans__.ttf
+HINDI OK: romantic.ttf
+HINDI OK: romant__.ttf
+HINDI OK: sanssbo_.ttf
+HINDI OK: sanssb__.ttf
+HINDI OK: SansSerifCollection.ttf
+HINDI OK: sansso__.ttf
+HINDI OK: sanss___.ttf
+HINDI OK: SCHLBKB.TTF
+HINDI OK: SCHLBKBI.TTF
+HINDI OK: SCHLBKI.TTF
+HINDI OK: SCRIPTBL.TTF
+HINDI OK: scriptc_.ttf
+HINDI OK: scripts_.ttf
+HINDI OK: scripts_IV25.ttf
+HINDI OK: scripts_IV50.ttf
+HINDI OK: segmdl2.ttf
+HINDI OK: SegoeIcons.ttf
+HINDI OK: segoepr.ttf
+HINDI OK: segoeprb.ttf
+HINDI OK: segoesc.ttf
+HINDI OK: segoescb.ttf
+HINDI OK: segoeui.ttf
+HINDI OK: segoeuib.ttf
+HINDI OK: segoeuii.ttf
+HINDI OK: segoeuil.ttf
+HINDI OK: segoeuisl.ttf
+HINDI OK: segoeuiz.ttf
+HINDI OK: seguibl.ttf
+HINDI OK: seguibli.ttf
+HINDI OK: seguiemj.ttf
+HINDI OK: seguihis.ttf
+HINDI OK: seguili.ttf
+HINDI OK: seguisb.ttf
+HINDI OK: seguisbi.ttf
+HINDI OK: seguisli.ttf
+HINDI OK: seguisym.ttf
+HINDI OK: SegUIVar.ttf
+HINDI OK: SHOWG.TTF
+skip: simplex_.ttf
+skip: simplex_IV25.ttf
+skip: simplex_IV50.ttf
+HINDI OK: simsunb.ttf
+HINDI OK: SimsunExtG.ttf
+HINDI OK: SitkaVF-Italic.ttf
+HINDI OK: SitkaVF.ttf
+HINDI OK: SNAP____.TTF
+HINDI OK: STENCIL.TTF
+HINDI OK: stylu.ttf
+HINDI OK: supef___.ttf
+HINDI OK: swiss.ttf
+HINDI OK: swissb.ttf
+HINDI OK: swissbi.ttf
+HINDI OK: swissbo.ttf
+HINDI OK: swissc.ttf
+HINDI OK: swisscb.ttf
+HINDI OK: swisscbi.ttf
+HINDI OK: swisscbo.ttf
+HINDI OK: swissci.ttf
+HINDI OK: swissck.ttf
+HINDI OK: swisscki.ttf
+HINDI OK: swisscl.ttf
+HINDI OK: swisscli.ttf
+HINDI OK: swisse.ttf
+HINDI OK: swisseb.ttf
+HINDI OK: swissek.ttf
+HINDI OK: swissel.ttf
+HINDI OK: swissi.ttf
+HINDI OK: swissk.ttf
+HINDI OK: swisski.ttf
+HINDI OK: swissko.ttf
+HINDI OK: swissl.ttf
+HINDI OK: swissli.ttf
+HINDI OK: syastro_.ttf
+HINDI OK: syastro_IV25.ttf
+HINDI OK: syastro_IV50.ttf
+HINDI OK: sylfaen.ttf
+HINDI OK: symap_IV25.ttf
+HINDI OK: symap_IV50.ttf
+HINDI OK: symap___.ttf
+HINDI OK: symath_IV25.ttf
+HINDI OK: symath_IV50.ttf
+HINDI OK: symath__.ttf
+HINDI OK: symbol.ttf
+HINDI OK: symeteo_.ttf
+HINDI OK: symeteo_IV25.ttf
+HINDI OK: symeteo_IV50.ttf
+HINDI OK: symusic_.ttf
+HINDI OK: symusic_IV25.ttf
+HINDI OK: symusic_IV50.ttf
+HINDI OK: tahoma.ttf
+HINDI OK: tahomabd.ttf
+HINDI OK: taile.ttf
+HINDI OK: taileb.ttf
+HINDI OK: TCBI____.TTF
+HINDI OK: TCB_____.TTF
+HINDI OK: TCCB____.TTF
+HINDI OK: TCCEB.TTF
+HINDI OK: TCCM____.TTF
+HINDI OK: TCMI____.TTF
+HINDI OK: TCM_____.TTF
+HINDI OK: techb___.ttf
+HINDI OK: techl___.ttf
+HINDI OK: technic_.ttf
+HINDI OK: TEMPSITC.TTF
+HINDI OK: times.ttf
+HINDI OK: timesbd.ttf
+HINDI OK: timesbi.ttf
+HINDI OK: timesi.ttf
+HINDI OK: trebuc.ttf
+HINDI OK: trebucbd.ttf
+HINDI OK: trebucbi.ttf
+HINDI OK: trebucit.ttf
+HINDI OK: txt_IV25.ttf
+HINDI OK: txt_IV50.ttf
+HINDI OK: txt_____.ttf
+HINDI OK: umath.ttf
+HINDI OK: verdana.ttf
+HINDI OK: verdanab.ttf
+HINDI OK: verdanai.ttf
+HINDI OK: verdanaz.ttf
+HINDI OK: VINERITC.TTF
+HINDI OK: vinet.ttf
+HINDI OK: VIVALDII.TTF
+HINDI OK: VLADIMIR.TTF
+HINDI OK: webdings.ttf
+HINDI OK: wingding.ttf
+HINDI OK: WINGDNG2.TTF
+HINDI OK: WINGDNG3.TTF
+
+Total Hindi-capable fonts: 455
+  C:\Windows\Fonts\AGENCYB.TTF
+  C:\Windows\Fonts\AGENCYR.TTF
+  C:\Windows\Fonts\AIGDT___.TTF
+  C:\Windows\Fonts\ALGER.TTF
+  C:\Windows\Fonts\Amgdt_IV25.ttf
+  C:\Windows\Fonts\Amgdt_IV50.ttf
+  C:\Windows\Fonts\ANTQUAB.TTF
+  C:\Windows\Fonts\ANTQUABI.TTF
+  C:\Windows\Fonts\ANTQUAI.TTF
+  C:\Windows\Fonts\arial.ttf
+  C:\Windows\Fonts\arialbd.ttf
+  C:\Windows\Fonts\arialbi.ttf
+  C:\Windows\Fonts\ariali.ttf
+  C:\Windows\Fonts\ARIALN.TTF
+  C:\Windows\Fonts\ARIALNB.TTF
+  C:\Windows\Fonts\ARIALNBI.TTF
+  C:\Windows\Fonts\ARIALNI.TTF
+  C:\Windows\Fonts\ARIALUNI.ttf
+  C:\Windows\Fonts\ariblk.ttf
+  C:\Windows\Fonts\ARLRDBD.TTF
+  C:\Windows\Fonts\Artifakt Element Black Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Black.ttf
+  C:\Windows\Fonts\Artifakt Element Bold Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Bold.ttf
+  C:\Windows\Fonts\Artifakt Element Book Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Book.ttf
+  C:\Windows\Fonts\Artifakt Element Hair Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Hair.ttf
+  C:\Windows\Fonts\Artifakt Element Heavy Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Heavy.ttf
+  C:\Windows\Fonts\Artifakt Element Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Light Italic.ttf
+  C:\Windows\Fonts\Artifakt Element LIght.ttf
+  C:\Windows\Fonts\Artifakt Element Medium Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Medium.ttf
+  C:\Windows\Fonts\Artifakt Element Regular.ttf
+  C:\Windows\Fonts\Artifakt Element Thin Italic.ttf
+  C:\Windows\Fonts\Artifakt Element Thin.ttf
+  C:\Windows\Fonts\bahnschrift.ttf
+  C:\Windows\Fonts\BASKVILL.TTF
+  C:\Windows\Fonts\BAUHS93.TTF
+  C:\Windows\Fonts\BELL.TTF
+  C:\Windows\Fonts\BELLB.TTF
+  C:\Windows\Fonts\BELLI.TTF
+  C:\Windows\Fonts\BERNHC.TTF
+  C:\Windows\Fonts\bgothl.ttf
+  C:\Windows\Fonts\bgothm.ttf
+  C:\Windows\Fonts\BKANT.TTF
+  C:\Windows\Fonts\BOD_B.TTF
+  C:\Windows\Fonts\BOD_BI.TTF
+  C:\Windows\Fonts\BOD_BLAI.TTF
+  C:\Windows\Fonts\BOD_BLAR.TTF
+  C:\Windows\Fonts\BOD_CB.TTF
+  C:\Windows\Fonts\BOD_CBI.TTF
+  C:\Windows\Fonts\BOD_CI.TTF
+  C:\Windows\Fonts\BOD_CR.TTF
+  C:\Windows\Fonts\BOD_I.TTF
+  C:\Windows\Fonts\BOD_PSTC.TTF
+  C:\Windows\Fonts\BOD_R.TTF
+  C:\Windows\Fonts\BOOKOS.TTF
+  C:\Windows\Fonts\BOOKOSB.TTF
+  C:\Windows\Fonts\BOOKOSBI.TTF
+  C:\Windows\Fonts\BOOKOSI.TTF
+  C:\Windows\Fonts\BRADHITC.TTF
+  C:\Windows\Fonts\BRITANIC.TTF
+  C:\Windows\Fonts\BRLNSB.TTF
+  C:\Windows\Fonts\BRLNSDB.TTF
+  C:\Windows\Fonts\BRLNSR.TTF
+  C:\Windows\Fonts\BROADW.TTF
+  C:\Windows\Fonts\BRUSHSCI.TTF
+  C:\Windows\Fonts\BSSYM7.TTF
+  C:\Windows\Fonts\calibri.ttf
+  C:\Windows\Fonts\calibrib.ttf
+  C:\Windows\Fonts\calibrii.ttf
+  C:\Windows\Fonts\calibril.ttf
+  C:\Windows\Fonts\calibrili.ttf
+  C:\Windows\Fonts\calibriz.ttf
+  C:\Windows\Fonts\CALIFB.TTF
+  C:\Windows\Fonts\CALIFI.TTF
+  C:\Windows\Fonts\CALIFR.TTF
+  C:\Windows\Fonts\CALIST.TTF
+  C:\Windows\Fonts\CALISTB.TTF
+  C:\Windows\Fonts\CALISTBI.TTF
+  C:\Windows\Fonts\CALISTI.TTF
+  C:\Windows\Fonts\cambriab.ttf
+  C:\Windows\Fonts\cambriai.ttf
+  C:\Windows\Fonts\cambriaz.ttf
+  C:\Windows\Fonts\Candara.ttf
+  C:\Windows\Fonts\Candarab.ttf
+  C:\Windows\Fonts\Candarai.ttf
+  C:\Windows\Fonts\Candaral.ttf
+  C:\Windows\Fonts\Candarali.ttf
+  C:\Windows\Fonts\Candaraz.ttf
+  C:\Windows\Fonts\CASTELAR.TTF
+  C:\Windows\Fonts\CENSCBK.TTF
+  C:\Windows\Fonts\CENTAUR.TTF
+  C:\Windows\Fonts\CENTURY.TTF
+  C:\Windows\Fonts\CHILLER.TTF
+  C:\Windows\Fonts\cityb___.ttf
+  C:\Windows\Fonts\COLONNA.TTF
+  C:\Windows\Fonts\comic.ttf
+  C:\Windows\Fonts\comicbd.ttf
+  C:\Windows\Fonts\comici.ttf
+  C:\Windows\Fonts\comicz.ttf
+  C:\Windows\Fonts\compi.ttf
+  C:\Windows\Fonts\complex_.ttf
+  C:\Windows\Fonts\complex_IV25.ttf
+  C:\Windows\Fonts\complex_IV50.ttf
+  C:\Windows\Fonts\comsc.ttf
+  C:\Windows\Fonts\consola.ttf
+  C:\Windows\Fonts\consolab.ttf
+  C:\Windows\Fonts\consolai.ttf
+  C:\Windows\Fonts\consolaz.ttf
+  C:\Windows\Fonts\constan.ttf
+  C:\Windows\Fonts\constanb.ttf
+  C:\Windows\Fonts\constani.ttf
+  C:\Windows\Fonts\constanz.ttf
+  C:\Windows\Fonts\COOPBL.TTF
+  C:\Windows\Fonts\COPRGTB.TTF
+  C:\Windows\Fonts\COPRGTL.TTF
+  C:\Windows\Fonts\corbel.ttf
+  C:\Windows\Fonts\corbelb.ttf
+  C:\Windows\Fonts\corbeli.ttf
+  C:\Windows\Fonts\corbell.ttf
+  C:\Windows\Fonts\corbelli.ttf
+  C:\Windows\Fonts\corbelz.ttf
+  C:\Windows\Fonts\counb___.ttf
+  C:\Windows\Fonts\cour.ttf
+  C:\Windows\Fonts\courbd.ttf
+  C:\Windows\Fonts\courbi.ttf
+  C:\Windows\Fonts\couri.ttf
+  C:\Windows\Fonts\CURLZ___.TTF
+  C:\Windows\Fonts\DUBAI-BOLD.TTF
+  C:\Windows\Fonts\DUBAI-LIGHT.TTF
+  C:\Windows\Fonts\DUBAI-MEDIUM.TTF
+  C:\Windows\Fonts\DUBAI-REGULAR.TTF
+  C:\Windows\Fonts\dutch.ttf
+  C:\Windows\Fonts\dutchb.ttf
+  C:\Windows\Fonts\dutchbi.ttf
+  C:\Windows\Fonts\dutcheb.ttf
+  C:\Windows\Fonts\dutchi.ttf
+  C:\Windows\Fonts\ebrima.ttf
+  C:\Windows\Fonts\ebrimabd.ttf
+  C:\Windows\Fonts\ELEPHNT.TTF
+  C:\Windows\Fonts\ELEPHNTI.TTF
+  C:\Windows\Fonts\ENGR.TTF
+  C:\Windows\Fonts\ERASBD.TTF
+  C:\Windows\Fonts\ERASDEMI.TTF
+  C:\Windows\Fonts\ERASLGHT.TTF
+  C:\Windows\Fonts\ERASMD.TTF
+  C:\Windows\Fonts\eurro___.ttf
+  C:\Windows\Fonts\eurr____.ttf
+  C:\Windows\Fonts\FELIXTI.TTF
+  C:\Windows\Fonts\FORTE.TTF
+  C:\Windows\Fonts\FRABK.TTF
+  C:\Windows\Fonts\FRABKIT.TTF
+  C:\Windows\Fonts\FRADM.TTF
+  C:\Windows\Fonts\FRADMCN.TTF
+  C:\Windows\Fonts\FRADMIT.TTF
+  C:\Windows\Fonts\FRAHV.TTF
+  C:\Windows\Fonts\FRAHVIT.TTF
+  C:\Windows\Fonts\framd.ttf
+  C:\Windows\Fonts\FRAMDCN.TTF
+  C:\Windows\Fonts\framdit.ttf
+  C:\Windows\Fonts\FREESCPT.TTF
+  C:\Windows\Fonts\FRSCRIPT.TTF
+  C:\Windows\Fonts\FTLTLT.TTF
+  C:\Windows\Fonts\Gabriola.ttf
+  C:\Windows\Fonts\gadugi.ttf
+  C:\Windows\Fonts\gadugib.ttf
+  C:\Windows\Fonts\GARA.TTF
+  C:\Windows\Fonts\GARABD.TTF
+  C:\Windows\Fonts\GARAIT.TTF
+  C:\Windows\Fonts\gdt_IV25.ttf
+  C:\Windows\Fonts\gdt_IV50.ttf
+  C:\Windows\Fonts\gdt_____.ttf
+  C:\Windows\Fonts\georgia.ttf
+  C:\Windows\Fonts\georgiab.ttf
+  C:\Windows\Fonts\georgiai.ttf
+  C:\Windows\Fonts\georgiaz.ttf
+  C:\Windows\Fonts\GIGI.TTF
+  C:\Windows\Fonts\GILBI___.TTF
+  C:\Windows\Fonts\GILB____.TTF
+  C:\Windows\Fonts\GILC____.TTF
+  C:\Windows\Fonts\GILI____.TTF
+  C:\Windows\Fonts\GILLUBCD.TTF
+  C:\Windows\Fonts\GILSANUB.TTF
+  C:\Windows\Fonts\GIL_____.TTF
+  C:\Windows\Fonts\GLECB.TTF
+  C:\Windows\Fonts\GLSNECB.TTF
+  C:\Windows\Fonts\GOST Common.ttf
+  C:\Windows\Fonts\GOTHIC.TTF
+  C:\Windows\Fonts\GOTHICB.TTF
+  C:\Windows\Fonts\GOTHICBI.TTF
+  C:\Windows\Fonts\gothice_.ttf
+  C:\Windows\Fonts\gothicg_.ttf
+  C:\Windows\Fonts\GOTHICI.TTF
+  C:\Windows\Fonts\gothici_.ttf
+  C:\Windows\Fonts\GOUDOS.TTF
+  C:\Windows\Fonts\GOUDOSB.TTF
+  C:\Windows\Fonts\GOUDOSI.TTF
+  C:\Windows\Fonts\GOUDYSTO.TTF
+  C:\Windows\Fonts\greekc_IV25.ttf
+  C:\Windows\Fonts\greekc_IV50.ttf
+  C:\Windows\Fonts\greekc__.ttf
+  C:\Windows\Fonts\greeks_IV25.ttf
+  C:\Windows\Fonts\greeks_IV50.ttf
+  C:\Windows\Fonts\greeks__.ttf
+  C:\Windows\Fonts\HARLOWSI.TTF
+  C:\Windows\Fonts\HARNGTON.TTF
+  C:\Windows\Fonts\HATTEN.TTF
+  C:\Windows\Fonts\himalaya.ttf
+  C:\Windows\Fonts\HTOWERT.TTF
+  C:\Windows\Fonts\HTOWERTI.TTF
+  C:\Windows\Fonts\impact.ttf
+  C:\Windows\Fonts\IMPRISHA.TTF
+  C:\Windows\Fonts\INFROMAN.TTF
+  C:\Windows\Fonts\Inkfree.ttf
+  C:\Windows\Fonts\isocpeur.ttf
+  C:\Windows\Fonts\italicc_.ttf
+  C:\Windows\Fonts\italict_.ttf
+  C:\Windows\Fonts\italic_IV25.ttf
+  C:\Windows\Fonts\italic_IV50.ttf
+  C:\Windows\Fonts\italic__.ttf
+  C:\Windows\Fonts\ITCBLKAD.TTF
+  C:\Windows\Fonts\ITCEDSCR.TTF
+  C:\Windows\Fonts\ITCKRIST.TTF
+  C:\Windows\Fonts\javatext.ttf
+  C:\Windows\Fonts\JOKERMAN.TTF
+  C:\Windows\Fonts\JUICE___.TTF
+  C:\Windows\Fonts\KUNSTLER.TTF
+  C:\Windows\Fonts\LATINWD.TTF
+  C:\Windows\Fonts\LBRITE.TTF
+  C:\Windows\Fonts\LBRITED.TTF
+  C:\Windows\Fonts\LBRITEDI.TTF
+  C:\Windows\Fonts\LBRITEI.TTF
+  C:\Windows\Fonts\LCALLIG.TTF
+  C:\Windows\Fonts\LeelaUIb.ttf
+  C:\Windows\Fonts\LeelawUI.ttf
+  C:\Windows\Fonts\LeelUIsl.ttf
+  C:\Windows\Fonts\LFAX.TTF
+  C:\Windows\Fonts\LFAXD.TTF
+  C:\Windows\Fonts\LFAXDI.TTF
+  C:\Windows\Fonts\LFAXI.TTF
+  C:\Windows\Fonts\LHANDW.TTF
+  C:\Windows\Fonts\LSANS.TTF
+  C:\Windows\Fonts\LSANSD.TTF
+  C:\Windows\Fonts\LSANSDI.TTF
+  C:\Windows\Fonts\LSANSI.TTF
+  C:\Windows\Fonts\LTYPE.TTF
+  C:\Windows\Fonts\LTYPEB.TTF
+  C:\Windows\Fonts\LTYPEBO.TTF
+  C:\Windows\Fonts\LTYPEO.TTF
+  C:\Windows\Fonts\lucon.ttf
+  C:\Windows\Fonts\l_10646.ttf
+  C:\Windows\Fonts\MAGNETOB.TTF
+  C:\Windows\Fonts\MAIAN.TTF
+  C:\Windows\Fonts\malgun.ttf
+  C:\Windows\Fonts\malgunbd.ttf
+  C:\Windows\Fonts\malgunsl.ttf
+  C:\Windows\Fonts\marlett.ttf
+  C:\Windows\Fonts\MATURASC.TTF
+  C:\Windows\Fonts\micross.ttf
+  C:\Windows\Fonts\MISTRAL.TTF
+  C:\Windows\Fonts\mmrtext.ttf
+  C:\Windows\Fonts\mmrtextb.ttf
+  C:\Windows\Fonts\MOD20.TTF
+  C:\Windows\Fonts\monbaiti.ttf
+  C:\Windows\Fonts\monos.ttf
+  C:\Windows\Fonts\monosb.ttf
+  C:\Windows\Fonts\monosbi.ttf
+  C:\Windows\Fonts\monosi.ttf
+  C:\Windows\Fonts\monotxt_.ttf
+  C:\Windows\Fonts\monotxt_IV25.ttf
+  C:\Windows\Fonts\monotxt_IV50.ttf
+  C:\Windows\Fonts\msyi.ttf
+  C:\Windows\Fonts\MTCORSVA.TTF
+  C:\Windows\Fonts\MTEXTRA.TTF
+  C:\Windows\Fonts\mtproxy1.ttf
+  C:\Windows\Fonts\mtproxy2.ttf
+  C:\Windows\Fonts\mtproxy3.ttf
+  C:\Windows\Fonts\mtproxy4.ttf
+  C:\Windows\Fonts\mtproxy5.ttf
+  C:\Windows\Fonts\mtproxy6.ttf
+  C:\Windows\Fonts\mtproxy7.ttf
+  C:\Windows\Fonts\mtproxy8.ttf
+  C:\Windows\Fonts\mtproxy9.ttf
+  C:\Windows\Fonts\mvboli.ttf
+  C:\Windows\Fonts\NIAGENG.TTF
+  C:\Windows\Fonts\NIAGSOL.TTF
+  C:\Windows\Fonts\ntailu.ttf
+  C:\Windows\Fonts\ntailub.ttf
+  C:\Windows\Fonts\OCRAEXT.TTF
+  C:\Windows\Fonts\OLDENGL.TTF
+  C:\Windows\Fonts\ONYX.TTF
+  C:\Windows\Fonts\OUTLOOK.TTF
+  C:\Windows\Fonts\pala.ttf
+  C:\Windows\Fonts\palab.ttf
+  C:\Windows\Fonts\palabi.ttf
+  C:\Windows\Fonts\palai.ttf
+  C:\Windows\Fonts\PALSCRI.TTF
+  C:\Windows\Fonts\panroman.ttf
+  C:\Windows\Fonts\PAPYRUS.TTF
+  C:\Windows\Fonts\PARCHM.TTF
+  C:\Windows\Fonts\PERBI___.TTF
+  C:\Windows\Fonts\PERB____.TTF
+  C:\Windows\Fonts\PERI____.TTF
+  C:\Windows\Fonts\PERTIBD.TTF
+  C:\Windows\Fonts\PERTILI.TTF
+  C:\Windows\Fonts\PER_____.TTF
+  C:\Windows\Fonts\phagspa.ttf
+  C:\Windows\Fonts\phagspab.ttf
+  C:\Windows\Fonts\PLAYBILL.TTF
+  C:\Windows\Fonts\POORICH.TTF
+  C:\Windows\Fonts\PRISTINA.TTF
+  C:\Windows\Fonts\RAGE.TTF
+  C:\Windows\Fonts\RAVIE.TTF
+  C:\Windows\Fonts\REFSAN.TTF
+  C:\Windows\Fonts\REFSPCL.TTF
+  C:\Windows\Fonts\ROCCB___.TTF
+  C:\Windows\Fonts\ROCC____.TTF
+  C:\Windows\Fonts\ROCK.TTF
+  C:\Windows\Fonts\ROCKB.TTF
+  C:\Windows\Fonts\ROCKBI.TTF
+  C:\Windows\Fonts\ROCKEB.TTF
+  C:\Windows\Fonts\ROCKI.TTF
+  C:\Windows\Fonts\romab___.ttf
+  C:\Windows\Fonts\romai___.ttf
+  C:\Windows\Fonts\romanc__.ttf
+  C:\Windows\Fonts\romand__.ttf
+  C:\Windows\Fonts\romantic.ttf
+  C:\Windows\Fonts\romant__.ttf
+  C:\Windows\Fonts\sanssbo_.ttf
+  C:\Windows\Fonts\sanssb__.ttf
+  C:\Windows\Fonts\SansSerifCollection.ttf
+  C:\Windows\Fonts\sansso__.ttf
+  C:\Windows\Fonts\sanss___.ttf
+  C:\Windows\Fonts\SCHLBKB.TTF
+  C:\Windows\Fonts\SCHLBKBI.TTF
+  C:\Windows\Fonts\SCHLBKI.TTF
+  C:\Windows\Fonts\SCRIPTBL.TTF
+  C:\Windows\Fonts\scriptc_.ttf
+  C:\Windows\Fonts\scripts_.ttf
+  C:\Windows\Fonts\scripts_IV25.ttf
+  C:\Windows\Fonts\scripts_IV50.ttf
+  C:\Windows\Fonts\segmdl2.ttf
+  C:\Windows\Fonts\SegoeIcons.ttf
+  C:\Windows\Fonts\segoepr.ttf
+  C:\Windows\Fonts\segoeprb.ttf
+  C:\Windows\Fonts\segoesc.ttf
+  C:\Windows\Fonts\segoescb.ttf
+  C:\Windows\Fonts\segoeui.ttf
+  C:\Windows\Fonts\segoeuib.ttf
+  C:\Windows\Fonts\segoeuii.ttf
+  C:\Windows\Fonts\segoeuil.ttf
+  C:\Windows\Fonts\segoeuisl.ttf
+  C:\Windows\Fonts\segoeuiz.ttf
+  C:\Windows\Fonts\seguibl.ttf
+  C:\Windows\Fonts\seguibli.ttf
+  C:\Windows\Fonts\seguiemj.ttf
+  C:\Windows\Fonts\seguihis.ttf
+  C:\Windows\Fonts\seguili.ttf
+  C:\Windows\Fonts\seguisb.ttf
+  C:\Windows\Fonts\seguisbi.ttf
+  C:\Windows\Fonts\seguisli.ttf
+  C:\Windows\Fonts\seguisym.ttf
+  C:\Windows\Fonts\SegUIVar.ttf
+  C:\Windows\Fonts\SHOWG.TTF
+  C:\Windows\Fonts\simsunb.ttf
+  C:\Windows\Fonts\SimsunExtG.ttf
+  C:\Windows\Fonts\SitkaVF-Italic.ttf
+  C:\Windows\Fonts\SitkaVF.ttf
+  C:\Windows\Fonts\SNAP____.TTF
+  C:\Windows\Fonts\STENCIL.TTF
+  C:\Windows\Fonts\stylu.ttf
+  C:\Windows\Fonts\supef___.ttf
+  C:\Windows\Fonts\swiss.ttf
+  C:\Windows\Fonts\swissb.ttf
+  C:\Windows\Fonts\swissbi.ttf
+  C:\Windows\Fonts\swissbo.ttf
+  C:\Windows\Fonts\swissc.ttf
+  C:\Windows\Fonts\swisscb.ttf
+  C:\Windows\Fonts\swisscbi.ttf
+  C:\Windows\Fonts\swisscbo.ttf
+  C:\Windows\Fonts\swissci.ttf
+  C:\Windows\Fonts\swissck.ttf
+  C:\Windows\Fonts\swisscki.ttf
+  C:\Windows\Fonts\swisscl.ttf
+  C:\Windows\Fonts\swisscli.ttf
+  C:\Windows\Fonts\swisse.ttf
+  C:\Windows\Fonts\swisseb.ttf
+  C:\Windows\Fonts\swissek.ttf
+  C:\Windows\Fonts\swissel.ttf
+  C:\Windows\Fonts\swissi.ttf
+  C:\Windows\Fonts\swissk.ttf
+  C:\Windows\Fonts\swisski.ttf
+  C:\Windows\Fonts\swissko.ttf
+  C:\Windows\Fonts\swissl.ttf
+  C:\Windows\Fonts\swissli.ttf
+  C:\Windows\Fonts\syastro_.ttf
+  C:\Windows\Fonts\syastro_IV25.ttf
+  C:\Windows\Fonts\syastro_IV50.ttf
+  C:\Windows\Fonts\sylfaen.ttf
+  C:\Windows\Fonts\symap_IV25.ttf
+  C:\Windows\Fonts\symap_IV50.ttf
+  C:\Windows\Fonts\symap___.ttf
+  C:\Windows\Fonts\symath_IV25.ttf
+  C:\Windows\Fonts\symath_IV50.ttf
+  C:\Windows\Fonts\symath__.ttf
+  C:\Windows\Fonts\symbol.ttf
+  C:\Windows\Fonts\symeteo_.ttf
+  C:\Windows\Fonts\symeteo_IV25.ttf
+  C:\Windows\Fonts\symeteo_IV50.ttf
+  C:\Windows\Fonts\symusic_.ttf
+  C:\Windows\Fonts\symusic_IV25.ttf
+  C:\Windows\Fonts\symusic_IV50.ttf
+  C:\Windows\Fonts\tahoma.ttf
+  C:\Windows\Fonts\tahomabd.ttf
+  C:\Windows\Fonts\taile.ttf
+  C:\Windows\Fonts\taileb.ttf
+  C:\Windows\Fonts\TCBI____.TTF
+  C:\Windows\Fonts\TCB_____.TTF
+  C:\Windows\Fonts\TCCB____.TTF
+  C:\Windows\Fonts\TCCEB.TTF
+  C:\Windows\Fonts\TCCM____.TTF
+  C:\Windows\Fonts\TCMI____.TTF
+  C:\Windows\Fonts\TCM_____.TTF
+  C:\Windows\Fonts\techb___.ttf
+  C:\Windows\Fonts\techl___.ttf
+  C:\Windows\Fonts\technic_.ttf
+  C:\Windows\Fonts\TEMPSITC.TTF
+  C:\Windows\Fonts\times.ttf
+  C:\Windows\Fonts\timesbd.ttf
+  C:\Windows\Fonts\timesbi.ttf
+  C:\Windows\Fonts\timesi.ttf
+  C:\Windows\Fonts\trebuc.ttf
+  C:\Windows\Fonts\trebucbd.ttf
+  C:\Windows\Fonts\trebucbi.ttf
+  C:\Windows\Fonts\trebucit.ttf
+  C:\Windows\Fonts\txt_IV25.ttf
+  C:\Windows\Fonts\txt_IV50.ttf
+  C:\Windows\Fonts\txt_____.ttf
+  C:\Windows\Fonts\umath.ttf
+  C:\Windows\Fonts\verdana.ttf
+  C:\Windows\Fonts\verdanab.ttf
+  C:\Windows\Fonts\verdanai.ttf
+  C:\Windows\Fonts\verdanaz.ttf
+  C:\Windows\Fonts\VINERITC.TTF
+  C:\Windows\Fonts\vinet.ttf
+  C:\Windows\Fonts\VIVALDII.TTF
+  C:\Windows\Fonts\VLADIMIR.TTF
+  C:\Windows\Fonts\webdings.ttf
+  C:\Windows\Fonts\wingding.ttf
+  C:\Windows\Fonts\WINGDNG2.TTF
+  C:\Windows\Fonts\WINGDNG3.TTF

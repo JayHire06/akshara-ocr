@@ -68,7 +68,7 @@ class SpellChecker:
             for char, child in node.children.items():
                 self._search_recursive(child, char, word, current_row, results, current_word + char, max_cost)
 
-    def correct(self, word: str, max_edit_distance: int = 1) -> str:
+    def correct(self, word: str, max_edit_distance: int = 1, return_all: bool = False):
         """Finds the best correction for a word within max_edit_distance using a Trie edit-distance search."""
         current_row = list(range(len(word) + 1))
         results = set()
@@ -83,12 +83,12 @@ class SpellChecker:
                 is_exact = False
                 break
         if is_exact and node.is_end:
-            return word
+            return [word] if return_all else word
 
         for char, child in self.trie.root.children.items():
             self._search_recursive(child, char, word, current_row, results, char, max_edit_distance)
             
         if not results:
-            return word
+            return [word] if return_all else word
             
-        return list(results)[0]
+        return list(results) if return_all else list(results)[0]

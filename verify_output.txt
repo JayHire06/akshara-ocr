@@ -1,0 +1,83 @@
+Downloading Lohit-Devanagari.ttf...
+  FAILED: HTTP Error 404: Not Found
+Downloading Poppins-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Poppins-Regular.ttf
+Downloading NotoSansDevanagari-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\NotoSansDevanagari-Regular.ttf
+Downloading NotoSerifDevanagari-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\NotoSerifDevanagari-Regular.ttf
+Downloading Mukta-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Mukta-Regular.ttf
+Downloading Mukta-Bold.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Mukta-Bold.ttf
+Downloading Hind-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Hind-Regular.ttf
+Downloading Hind-Bold.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Hind-Bold.ttf
+Downloading Baloo2-Regular.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\Baloo2-Regular.ttf
+Downloading DevLys010.ttf...
+  OK: c:\Users\jayhi\Downloads\akshara-ocr\data\fonts\DevLys010.ttf
+
+=== VERIFYING DOWNLOADS ===
+CONFIRMED: Amita-Regular.ttf (89 dark cols)
+CONFIRMED: AnekDevanagari-Regular.ttf (78 dark cols)
+CONFIRMED: Arya-Regular.ttf (83 dark cols)
+CONFIRMED: Asar-Regular.ttf (78 dark cols)
+CONFIRMED: Baloo-Regular.ttf (78 dark cols)
+CONFIRMED: Baloo2-Regular.ttf (79 dark cols)
+CONFIRMED: Chandas.ttf (78 dark cols)
+CONFIRMED: Changa-Regular.ttf (78 dark cols)
+CONFIRMED: Dekko-Regular.ttf (78 dark cols)
+CONFIRMED: DevLys010.ttf (78 dark cols)
+CONFIRMED: Eczar-Regular.ttf (80 dark cols)
+CONFIRMED: Fallback_NotoSansDevanagari.ttf (78 dark cols)
+CONFIRMED: Gargi.ttf (78 dark cols)
+CONFIRMED: Gionee-Regular.ttf (78 dark cols)
+CONFIRMED: Glegoo-Regular.ttf (92 dark cols)
+CONFIRMED: Gotu-Regular.ttf (78 dark cols)
+CONFIRMED: Halant-Regular.ttf (77 dark cols)
+CONFIRMED: Hind-Bold.ttf (79 dark cols)
+CONFIRMED: Hind-Regular.ttf (74 dark cols)
+CONFIRMED: Jaldi-Regular.ttf (78 dark cols)
+CONFIRMED: Kalam-Regular.ttf (78 dark cols)
+CONFIRMED: Kalimati.ttf (78 dark cols)
+CONFIRMED: Karma-Regular.ttf (74 dark cols)
+CONFIRMED: Khand-Regular.ttf (78 dark cols)
+CONFIRMED: Khula-Regular.ttf (78 dark cols)
+CONFIRMED: KumbhSans-Regular.ttf (78 dark cols)
+CONFIRMED: Kurale-Regular.ttf (78 dark cols)
+CONFIRMED: Laila-Regular.ttf (78 dark cols)
+CONFIRMED: Lohit-Devanagari.ttf (78 dark cols)
+CONFIRMED: Martel-Regular.ttf (78 dark cols)
+CONFIRMED: Modak-Regular.ttf (78 dark cols)
+CONFIRMED: Mukta-Bold.ttf (76 dark cols)
+CONFIRMED: Mukta-Regular.ttf (74 dark cols)
+CONFIRMED: Muktavaani-Regular.ttf (78 dark cols)
+CONFIRMED: Nakula.ttf (78 dark cols)
+CONFIRMED: NotoSansDevanagari-Regular.ttf (78 dark cols)
+CONFIRMED: NotoSerifDevanagari-Regular.ttf (74 dark cols)
+CONFIRMED: Poppins-Regular.ttf (100 dark cols)
+CONFIRMED: Pridi-Regular.ttf (78 dark cols)
+CONFIRMED: Rajdhani-Regular.ttf (78 dark cols)
+CONFIRMED: Ranga-Regular.ttf (78 dark cols)
+CONFIRMED: RhodiumLibre-Regular.ttf (78 dark cols)
+CONFIRMED: RozhaOne-Regular.ttf (79 dark cols)
+CONFIRMED: Sahadeva.ttf (78 dark cols)
+CONFIRMED: Sahitya-Regular.ttf (78 dark cols)
+CONFIRMED: Samanata.ttf (78 dark cols)
+CONFIRMED: Samyak-Devanagari.ttf (78 dark cols)
+CONFIRMED: SanskritText.ttf (78 dark cols)
+CONFIRMED: Sarpanch-Regular.ttf (78 dark cols)
+CONFIRMED: Shrikhand-Regular.ttf (78 dark cols)
+CONFIRMED: Siddhanta.ttf (78 dark cols)
+CONFIRMED: Sumana-Regular.ttf (78 dark cols)
+CONFIRMED: Sura-Regular.ttf (78 dark cols)
+CONFIRMED: Teko-Regular.ttf (78 dark cols)
+CONFIRMED: Tillana-Regular.ttf (78 dark cols)
+CONFIRMED: TiroDevanagariHindi-Regular.ttf (80 dark cols)
+CONFIRMED: VesperLibre-Regular.ttf (78 dark cols)
+CONFIRMED: Yantramanav-Regular.ttf (78 dark cols)
+CONFIRMED: YatraOne-Regular.ttf (87 dark cols)
+
+Total confirmed Hindi fonts: 59

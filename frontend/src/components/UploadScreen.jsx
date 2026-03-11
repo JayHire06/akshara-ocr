@@ -18,20 +18,21 @@ export default function UploadScreen({ onUploadSubmit }) {
         api.getLanguages()
             .then(res => {
                 setLanguages(res);
-                if (res.length > 0) setSelectedLanguage(res[0].code);
+                const defaultLg = localStorage.getItem('default_lang') || 'auto';
+                setSelectedLanguage(defaultLg);
                 setLoadingLangs(false);
             })
             .catch(err => {
                 console.error('Failed to load languages', err);
                 // Fallback for UI if API fails
                 const fallback = [
-                    { code: 'hin', name: 'Hindi', native_name: 'हिन्दी' },
+                    { code: 'hin', name: 'Hindi/Devanagari', native_name: 'हिन्दी' },
                     { code: 'tam', name: 'Tamil', native_name: 'தமிழ்' },
                     { code: 'ben', name: 'Bengali', native_name: 'বাংলা' },
                     { code: 'eng', name: 'English', native_name: 'English' }
                 ];
                 setLanguages(fallback);
-                setSelectedLanguage(fallback[0].code);
+                setSelectedLanguage('auto');
                 setLoadingLangs(false);
             });
     }, []);
@@ -171,6 +172,27 @@ export default function UploadScreen({ onUploadSubmit }) {
                     gap: 'var(--space-2)',
                     marginBottom: 'var(--space-4)'
                 }}>
+                    <div
+                        className={`lang-card ${selectedLanguage === 'auto' ? 'selected' : ''}`}
+                        onClick={() => setSelectedLanguage('auto')}
+                        style={{
+                            border: `1px solid ${selectedLanguage === 'auto' ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                            backgroundColor: selectedLanguage === 'auto' ? 'rgba(198, 241, 53, 0.1)' : 'var(--color-surface)',
+                            padding: 'var(--space-2)',
+                            borderRadius: 'var(--radius-button)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                            gridColumn: '1 / -1',
+                            fontWeight: '600',
+                            color: selectedLanguage === 'auto' ? 'var(--color-accent)' : 'var(--color-text)'
+                        }}
+                    >
+                        <div>Auto-Detect Language</div>
+                        {selectedLanguage === 'auto' && <CheckCircle size={18} color="var(--color-accent)" style={{ marginLeft: '8px' }} />}
+                    </div>
                     {languages.map((lang) => (
                         <div
                             key={lang.code}
@@ -185,17 +207,17 @@ export default function UploadScreen({ onUploadSubmit }) {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                transition: 'all 0.2s'
+                                transition: 'all 0.2s',
+                                transform: selectedLanguage === lang.code ? 'scale(1.02)' : 'scale(1)'
                             }}
                         >
                             <div>
                                 <div style={{ fontWeight: '500' }}>{lang.name}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>{lang.native_name}</div>
+                                {lang.native_name && <div style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>{lang.native_name}</div>}
                             </div>
                             {selectedLanguage === lang.code && <CheckCircle size={18} color="var(--color-accent)" />}
                         </div>
-                    ))}
-                </div>
+                    ))}  </div>
             )}
 
             {/* Document Type Selection */}

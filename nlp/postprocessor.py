@@ -27,26 +27,64 @@ def attempt_phonetic_correction(word: str, language: str) -> str:
             
     return word # Fallback to original
 
+from .ngram_lm import NgramLM
+from pathlib import Path
+
+_lms = {}
+
+def get_lm(language: str) -> NgramLM:
+    if language not in _lms:
+        lm_path = Path(__file__).parent / "data" / f"char_tri_{language}.json"
+        lm = NgramLM(n=3, level='char')
+        if lm_path.exists():
+            lm.load(str(lm_path))
+        _lms[language] = lm
+    return _lms[language]
+
 def correct(raw_text: str, language: str) -> str:
     """
     Corrects raw CTC OCR output.
     Step 1: Split into words.
-    Step 2: Check spell checker.
-    Step 3: Apply phonetic rules.
+    Step 2: Check spell checker (get all candidates).
+    Step 3: Filter by phonetic rules.
+    Step 4: Score remaining candidates with LM and pick best.
     """
     checker = get_spell_checker(language)
+    lm = get_lm(language)
     words = raw_text.split()
     corrected_words = []
     
     for word in words:
-        # Step 2: Spell Check
-        corrected_word = checker.correct(word, max_edit_distance=1)
-        
-        # Step 3: Phonetic Check
-        if not validate(corrected_word, language):
-            corrected_word = attempt_phonetic_correction(corrected_word, language)
+        # Step 2: Spell Check (get all candidates within distance 1)
+        candidates = checker.correct(word, max_edit_distance=1, return_all=True)
+        if isinstance(candidates, str):
+            candidates = [candidates]
             
-        corrected_words.append(corrected_word)
+        # Step 3: Phonetic Check
+        valid_candidates = []
+        for cand in candidates:
+            if validate(cand, language):
+                valid_candidates.append(cand)
+            else:
+                phonetic_corrected = attempt_phonetic_correction(cand, language)
+                if phonetic_corrected not in valid_candidates:
+                    valid_candidates.append(phonetic_corrected)
+                    
+        # If no valid candidates after rules, fallback to original
+        if not valid_candidates:
+            valid_candidates = [word]
+            
+        # Step 4: Score with LM
+        best_cand = valid_candidates[0]
+        best_score = float('-inf')
+        
+        for cand in valid_candidates:
+            score = lm.score(cand)
+            if score > best_score:
+                best_score = score
+                best_cand = cand
+                
+        corrected_words.append(best_cand)
         
     return " ".join(corrected_words)
 

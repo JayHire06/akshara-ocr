@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
-import { Copy, Download, Check, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Copy, Download, Check, ArrowLeft, CheckCircle2, FileText, Image as ImageIcon } from 'lucide-react';
 
-export default function ResultsScreen({ result, selectedLanguage, onBack }) {
+export default function ResultsScreen({ result, selectedLanguage, selectedFile, onBack }) {
     const [copied, setCopied] = useState(false);
+    const [imagePreview, setImagePreview] = useState(null);
+
+    useEffect(() => {
+        if (selectedFile) {
+            const objectUrl = URL.createObjectURL(selectedFile);
+            setImagePreview(objectUrl);
+            return () => URL.revokeObjectURL(objectUrl);
+        }
+    }, [selectedFile]);
 
     // Helper to map UI language codes to CSS fonts
     const getFontFamily = (langCode) => {
@@ -26,12 +35,30 @@ export default function ResultsScreen({ result, selectedLanguage, onBack }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleDownload = () => {
+    const handleDownloadTxt = () => {
         const blob = new Blob([result.text], { type: 'text/plain;charset=utf-8' });
+        triggerDownload(blob, `extracted_text_${Date.now()}.txt`);
+    };
+
+    const handleDownloadDocx = () => {
+        const htmlContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'></head><body><p style="font-size: 14pt;">${result.text.replace(/\n/g, '<br>')}</p></body></html>
+        `;
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+        triggerDownload(blob, `extracted_text_${Date.now()}.doc`);
+    };
+
+    const handleDownloadPdf = () => {
+        // Native print dialog allows saving as PDF easily without large third-party libraries
+        window.print();
+    };
+
+    const triggerDownload = (blob, filename) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `extracted_text_${Date.now()}.txt`;
+        link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -76,7 +103,7 @@ export default function ResultsScreen({ result, selectedLanguage, onBack }) {
                 {result.processingTimeMs && <div><strong>{(result.processingTimeMs / 1000).toFixed(2)}s</strong> Processing time</div>}
             </div>
 
-            <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '500px' }}>
+            <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '600px', '@media print': { height: 'auto', border: 'none', boxShadow: 'none' } }}>
                 <div style={{
                     padding: 'var(--space-2) var(--space-3)',
                     borderBottom: '1px solid var(--color-border)',
@@ -86,33 +113,78 @@ export default function ResultsScreen({ result, selectedLanguage, onBack }) {
                     backgroundColor: 'var(--color-surface)',
                     borderTopLeftRadius: 'var(--radius-card)',
                     borderTopRightRadius: 'var(--radius-card)'
-                }}>
+                }} className="print-hidden">
                     <span style={{ fontWeight: '500', color: 'var(--color-muted)', textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
-                        Result Text
+                        Result Actions
                     </span>
                     <div className="flex gap-2">
                         <button className="btn-secondary" onClick={handleCopy} style={{ padding: '4px 12px', fontSize: '0.9rem' }}>
                             {copied ? <Check size={16} color="var(--color-accent)" /> : <Copy size={16} />}
                             {copied ? 'Copied!' : 'Copy'}
                         </button>
-                        <button className="btn-primary" onClick={handleDownload} style={{ padding: '4px 12px', fontSize: '0.9rem' }}>
-                            <Download size={16} /> Download
+                        <button className="btn-secondary" onClick={handleDownloadTxt} style={{ padding: '4px 12px', fontSize: '0.9rem' }}>
+                            <FileText size={16} /> TXT
+                        </button>
+                        <button className="btn-secondary" onClick={handleDownloadDocx} style={{ padding: '4px 12px', fontSize: '0.9rem' }}>
+                            <FileText size={16} /> DOCX
+                        </button>
+                        <button className="btn-primary" onClick={handleDownloadPdf} style={{ padding: '4px 12px', fontSize: '0.9rem' }}>
+                            <Download size={16} /> PDF
                         </button>
                     </div>
                 </div>
 
-                <div style={{
-                    padding: 'var(--space-3)',
-                    flex: 1,
-                    overflowY: 'auto',
-                    fontFamily: getFontFamily(selectedLanguage),
-                    fontSize: '1.2rem',
-                    lineHeight: '1.8',
-                    whiteSpace: 'pre-wrap'
-                }}>
-                    {result.text}
+                <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                    {imagePreview && (
+                        <div style={{
+                            flex: 1,
+                            borderRight: '1px solid var(--color-border)',
+                            backgroundColor: '#000',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }} className="print-hidden">
+                            <span style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(0,0,0,0.6)', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <ImageIcon size={14} /> Original Source
+                            </span>
+                            <img src={imagePreview} alt="Original Document" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        </div>
+                    )}
+                    <div style={{
+                        padding: 'var(--space-3)',
+                        flex: 1,
+                        overflowY: 'auto',
+                        fontFamily: getFontFamily(selectedLanguage),
+                        fontSize: '1.2rem',
+                        lineHeight: '1.8',
+                        whiteSpace: 'pre-wrap'
+                    }}>
+                        {result.text}
+                    </div>
                 </div>
             </div>
+
+            <style>{`
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    .results-container, .results-container * {
+                        visibility: visible;
+                    }
+                    .results-container {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                    }
+                    .print-hidden {
+                        display: none !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }
