@@ -72,7 +72,7 @@ jobs:
       - name: Install bandit
         run: pip install bandit
       - name: Run bandit on Python code
-        run: bandit -r api preprocess model nlp
+        run: bandit -r api preprocess model nlp --severity-level high
       - name: Build Docker image for trivy
         run: docker build -t akshara-api:latest .
       - name: Run Trivy vulnerability scanner

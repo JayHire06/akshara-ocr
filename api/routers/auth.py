@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import datetime, timedelta, timezone
-import jwt
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 
 from api.db.database import get_db
@@ -39,7 +39,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except jwt.PyJWTError:
+    except JWTError:
         raise credentials_exception
     
     stmt = select(User).where(User.username == username)
