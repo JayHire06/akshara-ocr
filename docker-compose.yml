@@ -30,7 +30,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - MODEL_PATH=/app/models/akshara_ocr.onnx
+      - MODEL_PATH=/app/test.onnx
     command: uvicorn api.model_server:app --host 0.0.0.0 --port 8001
 
   celery-worker:
