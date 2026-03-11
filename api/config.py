@@ -2,9 +2,9 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    database_url: str
-    redis_url: str
-    jwt_secret: str
+    database_url: str = "sqlite+aiosqlite:///./test.db"
+    redis_url: str = "redis://localhost:6379"
+    jwt_secret: str = "test-secret-key-for-ci-only"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
     
