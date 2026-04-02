@@ -1,9 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-let authToken = localStorage.getItem('access_token') || null;
-
 export const setAuthToken = (token) => {
-  authToken = token;
   if (token) {
     localStorage.setItem('access_token', token);
   } else {
@@ -13,8 +10,9 @@ export const setAuthToken = (token) => {
 
 const getHeaders = (isFormData = false) => {
   const headers = {};
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
@@ -24,8 +22,7 @@ const getHeaders = (isFormData = false) => {
 
 export const api = {
   login: async (username, password) => {
-    // Basic mock or real implementation depending on backend
-    // Assuming backend takes regular JSON or Form Data
+    // Backend uses OAuth2PasswordRequestForm which requires x-www-form-urlencoded
     const formData = new URLSearchParams();
     formData.append('username', username);
     formData.append('password', password);
@@ -33,10 +30,14 @@ export const api = {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData
+      body: formData.toString()
     });
-    if (!response.ok) throw new Error('Login failed');
-    return response.json(); // {access_token, refresh_token}
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || 'Login failed');
+    }
+    return response.json();
   },
 
   register: async (username, password) => {
@@ -59,6 +60,13 @@ export const api = {
   },
 
   uploadDocument: async (file, languageCode) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      localStorage.removeItem('access_token');
+      window.location.href = '/';
+      throw new Error('Not authenticated');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('language', languageCode);
@@ -68,6 +76,13 @@ export const api = {
       headers: getHeaders(true),
       body: formData
     });
+
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem('access_token');
+      window.location.href = '/';
+      throw new Error('Session expired');
+    }
+
     if (!response.ok) throw new Error('Upload failed');
     return response.json(); // {job_id}
   },

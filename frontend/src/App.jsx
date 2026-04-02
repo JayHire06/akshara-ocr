@@ -102,23 +102,23 @@ function App() {
   const pollResult = async (id) => {
     try {
       let currentStatus = 'processing';
-      while (currentStatus === 'processing' && pollingActive.current) {
+      while ((currentStatus === 'processing' || currentStatus === 'queued') && pollingActive.current) {
         const res = await api.pollResult(id);
         currentStatus = res.status;
 
-        if (currentStatus === 'completed') {
+        if (currentStatus === 'done') {
           setResult({
             status: res.status,
             text: res.text,
             confidence: res.confidence,
-            wordCount: res.word_count || res.text.split(' ').length,
+            wordCount: res.word_count || (res.text ? res.text.split(' ').length : 0),
             processingTimeMs: res.processing_time_ms || 0,
             error: null
           });
           setCurrentView('result');
           return;
-        } else if (currentStatus === 'failed') {
-          throw new Error(res.error || 'Processing failed');
+        } else if (currentStatus === 'error') {
+          throw new Error(res.text || res.message || 'Processing failed');
         }
 
         // Wait 2 seconds
