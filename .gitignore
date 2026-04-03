@@ -33,3 +33,4 @@ nlp/data/*.txt
 
 data/font_augmented_train/
 data/iiit_real/
+nul

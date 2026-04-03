@@ -65,8 +65,9 @@ def segment_lines(binary_arr):
     kernel = np.ones(window) / window
     proj_smooth = np.convolve(proj, kernel, mode='same')
     
-    # Find line boundaries: a row is "text" if its smoothed sum > 2
-    text_rows = proj_smooth > 2
+    # Find line boundaries: a row is "text" if its smoothed sum > 0
+    # Using > 2 was too aggressive and dropped sparse/light lines on real images
+    text_rows = proj_smooth > 0
     
     # Collect start/end row indices of consecutive text rows
     segments = []
@@ -98,8 +99,8 @@ def segment_lines(binary_arr):
         else:
             merged_segments.append(current)
             
-    # Filter out segments shorter than 10px height
-    final_segments = [s for s in merged_segments if (s[1] - s[0]) >= 10]
+    # Filter out segments shorter than 8px height (relaxed from 10 to avoid dropping short lines)
+    final_segments = [s for s in merged_segments if (s[1] - s[0]) >= 8]
     
     return final_segments
 
@@ -107,8 +108,18 @@ def segment_words(line_binary_arr):
     """
     Segments words using vertical projection.
     """
-    # Compute vertical projection: sum of each column
-    proj = np.sum(line_binary_arr, axis=0)
+    h, w = line_binary_arr.shape
+    
+    # Mask out shirorekha rows before computing vertical projection.
+    # If a row has ink in > 70% of columns it is the Devanagari headline
+    # (shirorekha) and would create a false horizontal bridge across gaps.
+    row_ink = np.sum(line_binary_arr, axis=1)  # (H,)
+    shirorekha_rows = row_ink > (w * 0.70)
+    masked = line_binary_arr.copy()
+    masked[shirorekha_rows, :] = 0
+    
+    # Compute vertical projection: sum of each column (after masking)
+    proj = np.sum(masked, axis=0)
     
     # Find word boundaries: a column is "text" if its sum > 0
     text_cols = proj > 0
@@ -128,17 +139,41 @@ def segment_words(line_binary_arr):
             
     if in_segment:
         segments.append((start_idx, len(text_cols)))
-        
-    # Merge word segments that are less than 20px apart
+    
     if not segments:
         return []
-        
+    
+    # --- Adaptive valley-based gap threshold ---
+    # Compute all gap sizes between consecutive raw ink clusters.
+    # In Devanagari text there are two distinct gap populations:
+    #   - Intra-character / matra gaps: small (1-7px)
+    #   - Inter-word gaps: larger (10-30px depending on font/DPI)
+    # We find the threshold by locating the LARGEST JUMP between
+    # consecutive sorted gap values (valley detection in the histogram).
+    # This places the threshold precisely in the empty space between the
+    # two populations, for any image width or font size.
+    all_gaps = [segments[i][0] - segments[i-1][1] for i in range(1, len(segments))]
+    
+    if len(all_gaps) < 2:
+        # Only 0 or 1 gap: nothing sophisticated to do
+        gap_threshold = max(8, all_gaps[0] + 1) if all_gaps else 8
+    else:
+        sorted_gaps = sorted(all_gaps)
+        # Find the index of the biggest jump between consecutive sorted gap values
+        diffs = [sorted_gaps[i+1] - sorted_gaps[i] for i in range(len(sorted_gaps)-1)]
+        split_idx = int(np.argmax(diffs))
+        # Threshold sits at the midpoint of the valley
+        gap_threshold = int((sorted_gaps[split_idx] + sorted_gaps[split_idx+1]) / 2)
+        # Safety clamp: must be at least 8px and no more than 60px
+        gap_threshold = int(np.clip(gap_threshold, 8, 60))
+    
+    # Merge gaps smaller than threshold (intra-word / intra-character)
     merged_segments = [segments[0]]
     for current in segments[1:]:
         previous = merged_segments[-1]
-        
-        if current[0] - previous[1] < 20:
-            # merge
+        gap = current[0] - previous[1]
+        if gap < gap_threshold:
+            # merge — same word
             merged_segments[-1] = (previous[0], current[1])
         else:
             merged_segments.append(current)
@@ -213,8 +248,28 @@ def segment_page(image_path):
                 
         page_words.append(line_words)
         
-    # Return: list of lists
+    # Return: list of lists (outer=lines, inner=word PIL images)
     return page_words
+
+
+def combine_page_text(page_words, recognize_fn):
+    """
+    Given the output of segment_page() and a recognize function that maps a
+    word PIL image -> str, produce the full document text:
+      - words on the same line are joined with a single space
+      - lines are joined with a newline
+
+    Args:
+        page_words: list[list[PIL.Image]] — output of segment_page()
+        recognize_fn: callable(PIL.Image) -> str
+    Returns:
+        str — full document text
+    """
+    lines_text = []
+    for line_words in page_words:
+        word_texts = [recognize_fn(w) for w in line_words]
+        lines_text.append(' '.join(word_texts))
+    return '\n'.join(lines_text)
 
 
 if __name__ == '__main__':

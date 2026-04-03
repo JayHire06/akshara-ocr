@@ -21,6 +21,11 @@ def remove_horizontal_lines(image: Image.Image) -> Image.Image:
     k_width = 40
     h, w = ink_mask.shape
     
+    # Make kernel proportional to image width so short lines don't get
+    # their character strokes erased. A ruled line spans the full width;
+    # characters never do. Use 30% of image width, minimum 40px.
+    k_width = max(40, int(w * 0.30))
+    
     if w < k_width:
         return image
         
