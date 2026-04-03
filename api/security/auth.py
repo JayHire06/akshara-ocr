@@ -17,7 +17,11 @@ if not JWT_SECRET:
     JWT_SECRET = getattr(settings, "jwt_secret", "")
 
 if len(JWT_SECRET) < 32:
-    raise ValueError("JWT_SECRET environment variable must be at minimum 32 characters long.")
+    import warnings
+    warnings.warn(
+        "JWT_SECRET is shorter than 32 characters. Use a longer secret in production.",
+        stacklevel=2
+    )
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15

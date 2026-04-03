@@ -30,3 +30,5 @@ wandb/
 data/*.tar
 nlp/data/*.json
 nlp/data/*.txt
+data/iiit_real/
+data/font_augmented_train/

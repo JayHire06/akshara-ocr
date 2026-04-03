@@ -3,11 +3,14 @@ import random
 
 SOURCES = [
     r'c:\Users\jayhi\Downloads\akshara-ocr\data\font_train\labels.txt',
+    r'c:\Users\jayhi\Downloads\akshara-ocr\data\font_augmented_train\labels.txt',
     r'c:\Users\jayhi\Downloads\akshara-ocr\data\final\train\labels.txt',
+    r'c:\Users\jayhi\Downloads\akshara-ocr\data\iiit_real\labels.txt',
 ]
 VAL_SOURCES = [
     r'c:\Users\jayhi\Downloads\akshara-ocr\data\font_val\labels.txt',
     r'c:\Users\jayhi\Downloads\akshara-ocr\data\final\val\labels.txt',
+    r'c:\Users\jayhi\Downloads\akshara-ocr\data\iiit_real\val_labels.txt',
 ]
 OUTPUT_TRAIN = r'c:\Users\jayhi\Downloads\akshara-ocr\data\combined\train_labels.txt'
 OUTPUT_VAL = r'c:\Users\jayhi\Downloads\akshara-ocr\data\combined\val_labels.txt'

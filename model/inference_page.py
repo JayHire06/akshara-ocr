@@ -9,7 +9,7 @@ sys.path.insert(0, r'c:\Users\jayhi\Downloads\akshara-ocr')
 from preprocess.segment import segment_page
 
 VOCAB_FILE = r"c:\Users\jayhi\Downloads\akshara-ocr\data\vocab.json"
-MODEL_PATH = r"c:\Users\jayhi\Downloads\akshara-ocr\model\checkpoints\best_model_v3.pth"
+MODEL_PATH = r"c:\Users\jayhi\Downloads\akshara-ocr\model\checkpoints\best_model_v5.pth"
 
 # Load vocab
 with open(VOCAB_FILE, encoding='utf-8') as f:

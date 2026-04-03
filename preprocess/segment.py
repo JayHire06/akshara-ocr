@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 def binarize(img):
     """
@@ -129,7 +129,7 @@ def segment_words(line_binary_arr):
     if in_segment:
         segments.append((start_idx, len(text_cols)))
         
-    # Merge word segments that are less than 5px apart
+    # Merge word segments that are less than 20px apart
     if not segments:
         return []
         
@@ -137,7 +137,7 @@ def segment_words(line_binary_arr):
     for current in segments[1:]:
         previous = merged_segments[-1]
         
-        if current[0] - previous[1] < 5:
+        if current[0] - previous[1] < 20:
             # merge
             merged_segments[-1] = (previous[0], current[1])
         else:
@@ -152,10 +152,35 @@ def segment_page(image_path):
     """
     Full page segmentation orchestration
     """
-    # Load image, call binarize()
-    original_img = Image.open(image_path).convert('L')
-    binary_arr = binarize(original_img)
-    original_arr = np.array(original_img)
+    # Load image
+    original_img = Image.open(image_path)
+    
+    # Grayscale
+    gray_img = original_img.convert('L')
+    
+    # Contrast Enhancement
+    enhancer = ImageEnhance.Contrast(gray_img)
+    enhanced_img = enhancer.enhance(2.0)
+    
+    # Binarize
+    binary_arr = binarize(enhanced_img)
+    
+    # Remove horizontal lines
+    # binarize() returns a 0/1 array. remove_horizontal_lines expects a PIL Image
+    # Wait, binarize returns 1 where text, 0 where background!
+    # Our remove_horizontal_lines expects 0 where text, 255 where background!
+    # Let me translate binary_arr to 0/255 before passing 
+    pil_binary = Image.fromarray(np.where(binary_arr == 1, 0, 255).astype(np.uint8), mode='L')
+    
+    # Import locally to avoid circular import since pipeline imports segment
+    from .pipeline import remove_horizontal_lines
+    cleaned_pil = remove_horizontal_lines(pil_binary)
+    
+    # Convert back to 0/1 binary_arr
+    cleaned_arr = np.array(cleaned_pil)
+    binary_arr = np.where(cleaned_arr == 0, 1, 0).astype(np.uint8)
+    
+    original_arr = np.array(gray_img)
     
     # Call segment_lines() to get line regions
     line_bounds = segment_lines(binary_arr)
@@ -201,13 +226,13 @@ if __name__ == '__main__':
     test_img = Image.new('L', (400, 200), color=255)
     import numpy as np
     arr = np.array(test_img)
-    # Draw fake text blocks (black rectangles simulating words)
-    arr[20:40, 10:80] = 0    # line 1, word 1
-    arr[20:40, 90:160] = 0   # line 1, word 2
-    arr[20:40, 170:240] = 0  # line 1, word 3
-    arr[60:80, 10:90] = 0    # line 2, word 1
-    arr[60:80, 100:180] = 0  # line 2, word 2
-    arr[100:120, 10:200] = 0 # line 3, word 1 (long word)
+    # Draw fake text blocks (black rectangles simulating words) < 40px wide so they aren't removed as lines
+    arr[20:40, 10:35] = 0    # line 1, word 1
+    arr[20:40, 60:90] = 0   # line 1, word 2 (gap 25)
+    arr[20:40, 115:140] = 0  # line 1, word 3 (gap 25)
+    arr[60:80, 10:35] = 0    # line 2, word 1
+    arr[60:80, 60:90] = 0  # line 2, word 2 (gap 25)
+    arr[100:120, 10:35] = 0 # line 3, word 1
     
     test_img = Image.fromarray(arr)
     test_img.save('test_page.png')

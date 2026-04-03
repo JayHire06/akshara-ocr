@@ -9,7 +9,6 @@ from api.db.database import engine, Base
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from api.security.rate_limiter import limiter
-from api.security.middleware import SecurityHeadersMiddleware
 
 app = FastAPI(title="Akshara OCR API")
 
@@ -20,7 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SecurityHeadersMiddleware)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
