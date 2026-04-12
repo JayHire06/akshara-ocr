@@ -1,3 +1,23 @@
+# ──────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# ──────────────────────────────────────────────
+# Data directories (large / generated)
+# ──────────────────────────────────────────────
 data/dakshina_temp/
 data/final/
 data/font_train/
@@ -8,29 +28,99 @@ data/real_train_cvit/
 data/char_synthetic/
 data/fonts/
 data/synthetic_v2/
-data/*.png
-data/*.jpg
 data/real_datasets/
 data/real_test/
 data/realistic_synthetic/
 data/test/
 data/train/
 data/val/
+data/font_augmented_train/
+data/iiit_real/
+data/*.png
+data/*.jpg
+data/*.tar
+
+# ──────────────────────────────────────────────
+# Fonts (binary, large files — use a download script)
+# ──────────────────────────────────────────────
+fonts/
+# data/fonts/ is already covered above
+
+# ──────────────────────────────────────────────
+# Model artifacts
+# ──────────────────────────────────────────────
 model/checkpoints/*.pth
 model/checkpoints/*.onnx
 model/checkpoints_200k/
 model/checkpoints_realistic_v2/
-*.pyc
-__pycache__/
-node_modules/
-frontend/dist/
-.env
+
+# ONNX exports at the root (e.g. test.onnx)
+*.onnx
+
+# ──────────────────────────────────────────────
+# Debug / test output images at root
+# ──────────────────────────────────────────────
+debug_*.png
+debug_*.jpg
+test_out_line_*.png
+test_out_line_*.jpg
+test_page.png
+sample.png
+sample_hindi.png
+
+# ──────────────────────────────────────────────
+# Log files
+# ──────────────────────────────────────────────
+*.log
+error.log
+verify_output.txt
+test_fonts_out.txt
+
+# ──────────────────────────────────────────────
+# Database files
+# ──────────────────────────────────────────────
 *.db
+*.sqlite
+*.sqlite3
+
+# ──────────────────────────────────────────────
+# Runtime / scratch state
+# ──────────────────────────────────────────────
+run_id.txt
+runs.json
 wandb/
-data/*.tar
+
+# ──────────────────────────────────────────────
+# NLP generated data
+# ──────────────────────────────────────────────
 nlp/data/*.json
 nlp/data/*.txt
+nlp/dictionaries/
 
-data/font_augmented_train/
-data/iiit_real/
+# ──────────────────────────────────────────────
+# Frontend
+# ──────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# ──────────────────────────────────────────────
+# Playwright CLI session cache
+# ──────────────────────────────────────────────
+.playwright-cli/
+
+# ──────────────────────────────────────────────
+# Environment & secrets
+# ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ──────────────────────────────────────────────
+# Editor / OS junk
+# ──────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 nul
