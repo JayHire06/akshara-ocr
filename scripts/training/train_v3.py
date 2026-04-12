@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Subset
 
 os.environ["WANDB_MODE"] = "offline"
 
-root_dir = os.path.abspath(os.path.dirname(__file__))
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, root_dir)
 
 from data.dataset import OCRDataset

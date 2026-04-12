@@ -8,12 +8,12 @@ import numpy as np
 from PIL import Image
 
 # PATHS:
-TRAIN_LABELS = [
-    r"c:\Users\jayhi\Downloads\akshara-ocr\data\combined\train_labels.txt"
-]
-VAL_LABELS = r"c:\Users\jayhi\Downloads\akshara-ocr\data\combined\val_labels.txt"
-CHECKPOINT_DIR = r"c:\Users\jayhi\Downloads\akshara-ocr\model\checkpoints"
-VOCAB_FILE = r"c:\Users\jayhi\Downloads\akshara-ocr\data\vocab.json"
+import os
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+TRAIN_LABELS = [os.path.join(ROOT_DIR, "data", "combined", "train_labels.txt")]
+VAL_LABELS = os.path.join(ROOT_DIR, "data", "combined", "val_labels.txt")
+CHECKPOINT_DIR = os.path.join(ROOT_DIR, "model", "checkpoints_v2")
+VOCAB_FILE = os.path.join(ROOT_DIR, "vocab.json")
 
 # STEP 1 — Build vocab
 def build_vocab():
@@ -202,6 +202,7 @@ def train():
     for epoch in range(1, max_epochs + 1):
         model.train()
         train_loss = 0.0
+        print(f"\n--- Epoch {epoch}/{max_epochs} Started ---")
 
         for batch_idx, (images, targets, target_lengths, _) in enumerate(train_loader):
             images = images.to(device, non_blocking=True)

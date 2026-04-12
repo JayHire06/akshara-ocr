@@ -4,14 +4,21 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
-from tqdm import tqdm
-import wandb
+try:
+    import wandb
+except (ImportError, TypeError):
+    class _DummyWandb:
+        def init(self, *args, **kwargs): pass
+        def log(self, *args, **kwargs): pass
+        def Table(self, *args, **kwargs): return self
+        def add_data(self, *args, **kwargs): pass
+    wandb = _DummyWandb()
 import numpy as np
 from PIL import Image
 
 os.environ["WANDB_MODE"] = "offline"
 
-root_dir = os.path.abspath(os.path.dirname(__file__))
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, root_dir)
 
 from data.dataset import OCRDataset
@@ -122,8 +129,8 @@ def start_training():
         model.train()
         train_loss = 0.0
         
-        pbar = tqdm(train_loader, desc=f"Epoch {epoch}/{config['epochs']}")
-        for batch_idx, (images, targets, target_lengths) in enumerate(pbar):
+        print(f"\n--- Epoch {epoch}/{config['epochs']} Started ---")
+        for batch_idx, (images, targets, target_lengths) in enumerate(train_loader):
             images = images.to(device)
             targets = targets.to(device)
             target_lengths = target_lengths.to(device)
@@ -140,7 +147,8 @@ def start_training():
             
             train_loss += loss.item()
             wandb.log({'train_loss_step': loss.item()})
-            pbar.set_postfix({'loss': f"{loss.item():.4f}"})
+            if batch_idx % 200 == 0:
+                print(f"  Epoch {epoch} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
             
         avg_train_loss = train_loss / len(train_loader)
         print(f"\nEpoch {epoch} Completed. Avg Train Loss = {avg_train_loss:.4f}")
