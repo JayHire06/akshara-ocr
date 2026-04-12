@@ -1,8 +1,12 @@
 import os
+import pathlib
 from pydantic_settings import BaseSettings
 
+ROOT_DIR = pathlib.Path(__file__).parent.parent.resolve()
+DB_DIR = ROOT_DIR / "data" / "database"
+
 class Settings(BaseSettings):
-    database_url: str = "sqlite:///./test.db"
+    database_url: str = f"sqlite:///{DB_DIR}/test.db"
     redis_url: str = "redis://localhost:6379"
     jwt_secret: str = "test-secret-key-for-ci-only"
     jwt_algorithm: str = "HS256"
