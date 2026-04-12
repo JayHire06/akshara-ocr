@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Copy, Download, Check, ArrowLeft, CheckCircle2, FileText, Image as ImageIcon } from 'lucide-react';
 
 export default function ResultsScreen({ result, selectedLanguage, selectedFile, onBack }) {
     const [copied, setCopied] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
+    const exportBaseName = (selectedFile?.name || 'extracted_text').replace(/\.[^/.]+$/, '');
+    const imagePreview = useMemo(
+        () => (selectedFile ? URL.createObjectURL(selectedFile) : null),
+        [selectedFile]
+    );
 
     useEffect(() => {
-        if (selectedFile) {
-            const objectUrl = URL.createObjectURL(selectedFile);
-            setImagePreview(objectUrl);
-            return () => URL.revokeObjectURL(objectUrl);
+        if (imagePreview) {
+            return () => URL.revokeObjectURL(imagePreview);
         }
-    }, [selectedFile]);
+    }, [imagePreview]);
 
     // Helper to map UI language codes to CSS fonts
     const getFontFamily = (langCode) => {
@@ -37,7 +39,7 @@ export default function ResultsScreen({ result, selectedLanguage, selectedFile, 
 
     const handleDownloadTxt = () => {
         const blob = new Blob([result.text], { type: 'text/plain;charset=utf-8' });
-        triggerDownload(blob, `extracted_text_${Date.now()}.txt`);
+        triggerDownload(blob, `${exportBaseName}.txt`);
     };
 
     const handleDownloadDocx = () => {
@@ -46,7 +48,7 @@ export default function ResultsScreen({ result, selectedLanguage, selectedFile, 
             <head><meta charset='utf-8'></head><body><p style="font-size: 14pt;">${result.text.replace(/\n/g, '<br>')}</p></body></html>
         `;
         const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-        triggerDownload(blob, `extracted_text_${Date.now()}.doc`);
+        triggerDownload(blob, `${exportBaseName}.doc`);
     };
 
     const handleDownloadPdf = () => {

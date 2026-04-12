@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy import desc
 
@@ -13,11 +13,11 @@ router = APIRouter(prefix="/history", tags=["History"])
 async def get_history(
     skip: int = Query(0, ge=0), 
     limit: int = Query(10, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     stmt = select(OCRJob).where(OCRJob.user_id == current_user.id).order_by(desc(OCRJob.created_at)).offset(skip).limit(limit)
-    result = await db.execute(stmt)
+    result = db.execute(stmt)
     jobs = result.scalars().all()
     
     return [

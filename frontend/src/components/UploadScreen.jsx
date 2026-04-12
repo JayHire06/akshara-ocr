@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UploadCloud, File, Languages, CheckCircle } from 'lucide-react';
+import { UploadCloud, File as FileIcon, Languages, CheckCircle } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function UploadScreen({ onUploadSubmit }) {
+export default function UploadScreen({ onUploadSubmit, demoCases = [] }) {
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('');
     const [docType, setDocType] = useState('printed');
     const [languages, setLanguages] = useState([]);
     const [loadingLangs, setLoadingLangs] = useState(true);
+    const [loadingDemoId, setLoadingDemoId] = useState('');
+    const [selectedDemoCase, setSelectedDemoCase] = useState(null);
     const [errorMsg, setErrorMsg] = useState('');
 
     const fileInputRef = useRef(null);
@@ -65,6 +67,7 @@ export default function UploadScreen({ onUploadSubmit }) {
 
     const handleFileSelection = (file) => {
         setErrorMsg('');
+        setSelectedDemoCase(null);
         const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
         if (!validTypes.includes(file.type)) {
             setErrorMsg('Please upload a valid image (JPEG, PNG, WEBP) or PDF.');
@@ -75,6 +78,30 @@ export default function UploadScreen({ onUploadSubmit }) {
             return;
         }
         setSelectedFile(file);
+    };
+
+    const handleDemoSelection = async (demoCase) => {
+        setErrorMsg('');
+        setLoadingDemoId(demoCase.id);
+
+        try {
+            const response = await fetch(demoCase.assetPath);
+            if (!response.ok) {
+                throw new Error('Unable to load the bundled sample case.');
+            }
+
+            const blob = await response.blob();
+            const extension = blob.type.includes('png') ? 'png' : 'jpg';
+            const file = new window.File([blob], `${demoCase.id}.${extension}`, { type: blob.type || 'image/png' });
+
+            setSelectedFile(file);
+            setSelectedLanguage(demoCase.languageCode);
+            setSelectedDemoCase(demoCase);
+        } catch (err) {
+            setErrorMsg(err.message || 'Unable to load the sample case.');
+        } finally {
+            setLoadingDemoId('');
+        }
     };
 
     const onSubmit = () => {
@@ -95,6 +122,43 @@ export default function UploadScreen({ onUploadSubmit }) {
             <p style={{ color: 'var(--color-muted)', marginBottom: 'var(--space-4)' }}>
                 Select a document containing the regional text you wish to extract.
             </p>
+
+            {demoCases.length > 0 && (
+                <section style={{ marginBottom: 'var(--space-4)' }}>
+                    <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-2)', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                        <div>
+                            <h3 style={{ marginBottom: '4px' }}>Bundled Test Cases</h3>
+                            <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem' }}>
+                                Load a sample image into the uploader to quickly preview the OCR workflow.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="demo-case-grid compact">
+                        {demoCases.map((demoCase) => (
+                            <article key={demoCase.id} className={`demo-case-card compact ${selectedDemoCase?.id === demoCase.id ? 'selected' : ''}`}>
+                                <img src={demoCase.assetPath} alt={demoCase.title} className="demo-case-image" />
+                                <div className="demo-case-body">
+                                    <div className="demo-case-meta">
+                                        <span>{demoCase.script}</span>
+                                        <span>{demoCase.languageLabel}</span>
+                                    </div>
+                                    <h3>{demoCase.title}</h3>
+                                    <p>{demoCase.note}</p>
+                                    <pre className="demo-case-output">{demoCase.expectedText}</pre>
+                                    <button
+                                        className="btn-secondary"
+                                        onClick={() => handleDemoSelection(demoCase)}
+                                        disabled={loadingDemoId === demoCase.id}
+                                    >
+                                        {loadingDemoId === demoCase.id ? 'Loading sample...' : 'Use sample'}
+                                    </button>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Drag & Drop Zone */}
             <div
@@ -134,7 +198,7 @@ export default function UploadScreen({ onUploadSubmit }) {
                     </div>
                 ) : (
                     <div className="flex-col items-center justify-center gap-2">
-                        <File size={48} color="var(--color-accent)" />
+                        <FileIcon size={48} color="var(--color-accent)" />
                         <h3 style={{ marginTop: 'var(--space-2)' }}>{selectedFile.name}</h3>
                         <p style={{ color: 'var(--color-muted)' }}>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                         <button
@@ -143,6 +207,7 @@ export default function UploadScreen({ onUploadSubmit }) {
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedFile(null);
+                                setSelectedDemoCase(null);
                                 if (fileInputRef.current) fileInputRef.current.value = '';
                             }}
                         >
@@ -244,7 +309,7 @@ export default function UploadScreen({ onUploadSubmit }) {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-4)' }}>
                 <button
                     className="btn-primary"
                     onClick={onSubmit}

@@ -8,7 +8,8 @@ import ErrorScreen from './components/ErrorScreen';
 import AuthScreen from './components/AuthScreen';
 import SettingsScreen from './components/SettingsScreen';
 import { api, setAuthToken } from './services/api';
-import { Settings, LogOut } from 'lucide-react';
+import { demoCases } from './data/demoCases';
+import { Settings } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -16,12 +17,10 @@ function App() {
 
   // User State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
 
   // Upload State
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState('');
-  const [jobId, setJobId] = useState(null);
 
   // Result State
   const [result, setResult] = useState({
@@ -31,13 +30,6 @@ function App() {
     wordCount: 0,
     processingTimeMs: 0,
     error: null
-  });
-
-  // History State
-  const [history, setHistory] = useState({
-    jobs: [],
-    currentPage: 1,
-    totalPages: 1
   });
 
   // Global Error
@@ -85,7 +77,6 @@ function App() {
       pollingActive.current = true;
 
       const res = await api.uploadDocument(file, language);
-      setJobId(res.job_id);
 
       // Start polling
       pollResult(res.job_id);
@@ -131,7 +122,6 @@ function App() {
 
   const resetFlow = () => {
     setSelectedFile(null);
-    setJobId(null);
     setResult({ status: '', text: '', confidence: null, wordCount: 0, processingTimeMs: 0, error: null });
     setCurrentView('upload');
   };
@@ -158,9 +148,9 @@ function App() {
       </header>
 
       <main>
-        {currentView === 'landing' && <LandingScreen onStart={handleStart} />}
+        {currentView === 'landing' && <LandingScreen onStart={handleStart} demoCases={demoCases} />}
         {currentView === 'auth' && <AuthScreen onLoginSuccess={() => { setIsLoggedIn(true); setCurrentView('upload'); }} />}
-        {currentView === 'upload' && <UploadScreen onUploadSubmit={handleUploadSubmit} />}
+        {currentView === 'upload' && <UploadScreen onUploadSubmit={handleUploadSubmit} demoCases={demoCases} />}
         {currentView === 'processing' && <ProcessingScreen onCancel={cancelProcessing} />}
         {currentView === 'result' && <ResultsScreen result={result} selectedLanguage={selectedLanguage} selectedFile={selectedFile} onBack={resetFlow} />}
         {currentView === 'history' && <HistoryScreen />}

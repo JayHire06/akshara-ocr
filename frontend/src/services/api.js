@@ -1,4 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const DEPLOYED_FALLBACK_API_URL = 'https://obituaries-blend-obviously-window.trycloudflare.com';
+const IS_VERCEL_HOST = typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app');
+const API_URL = import.meta.env.VITE_API_URL || (IS_VERCEL_HOST ? DEPLOYED_FALLBACK_API_URL : 'http://127.0.0.1:8000');
 
 export const setAuthToken = (token) => {
   if (token) {

@@ -6,7 +6,7 @@ import shutil
 import aiofiles
 import threading
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.db.models import User
@@ -39,7 +39,7 @@ job_results: dict = {}
 async def upload_image(
     file: UploadFile = File(...),
     language: str = Form("hin"),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     MAX_SIZE = 10 * 1024 * 1024  # 10 MB

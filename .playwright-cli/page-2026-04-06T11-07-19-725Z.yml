@@ -1,0 +1,76 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - heading "Akshara OCR" [level=2] [ref=e5] [cursor=pointer]
+    - generic [ref=e104]:
+      - button "New Extract" [ref=e105] [cursor=pointer]
+      - button "History" [ref=e106] [cursor=pointer]
+      - button "Settings" [ref=e107] [cursor=pointer]:
+        - img [ref=e108]
+  - main [ref=e13]:
+    - generic [ref=e111]:
+      - heading "Upload Document" [level=2] [ref=e112]
+      - paragraph [ref=e113]: Select a document containing the regional text you wish to extract.
+      - generic [ref=e114]:
+        - generic [ref=e116]:
+          - heading "Bundled Test Cases" [level=3] [ref=e117]
+          - paragraph [ref=e118]: Load a sample image into the uploader to quickly preview the OCR workflow.
+        - generic [ref=e119]:
+          - article [ref=e120]:
+            - img "English Signboard" [ref=e121]
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]: Latin
+                - generic [ref=e125]: English
+              - heading "English Signboard" [level=3] [ref=e126]
+              - paragraph [ref=e127]: A tiny clean sample for checking the full upload to result loop.
+              - generic [ref=e128]: Hello World
+              - button "Use sample" [ref=e129] [cursor=pointer]
+          - article [ref=e130]:
+            - img "Hindi Poster" [ref=e131]
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - generic [ref=e134]: Devanagari
+                - generic [ref=e135]: Hindi
+              - heading "Hindi Poster" [level=3] [ref=e136]
+              - paragraph [ref=e137]: Bundled Devanagari text so visitors can preview the kind of script the project targets.
+              - generic [ref=e138]: नमस्ते दुनिया अक्षर ओसीआर परीक्षण
+              - button "Use sample" [ref=e139] [cursor=pointer]
+          - article [ref=e140]:
+            - img "Travel Notes" [ref=e141]
+            - generic [ref=e142]:
+              - generic [ref=e143]:
+                - generic [ref=e144]: Latin
+                - generic [ref=e145]: English
+              - heading "Travel Notes" [level=3] [ref=e146]
+              - paragraph [ref=e147]: A denser multi-line case that feels closer to a document snippet.
+              - generic [ref=e148]: Double Decker Bridge Dawki Lake Laitlum Canyons Wei Sawdong Falls
+              - button "Use sample" [ref=e149] [cursor=pointer]
+      - generic [ref=e151] [cursor=pointer]:
+        - img [ref=e171]
+        - heading "hello-world.png" [level=3] [ref=e174]
+        - paragraph [ref=e156]: 0.02 MB
+        - button "Remove" [ref=e175]
+      - heading "Select Primary Language" [level=3] [ref=e158]:
+        - img [ref=e159]
+        - text: Select Primary Language
+      - generic [ref=e176]:
+        - generic [ref=e178] [cursor=pointer]: Auto-Detect Language
+        - generic [ref=e181] [cursor=pointer]: Hindi/Devanagari
+        - generic [ref=e184] [cursor=pointer]: Bengali
+        - generic [ref=e187] [cursor=pointer]: Tamil
+        - generic [ref=e190] [cursor=pointer]: Telugu
+        - generic [ref=e193] [cursor=pointer]: Kannada
+        - generic [ref=e196] [cursor=pointer]: Malayalam
+        - generic [ref=e199] [cursor=pointer]: Marathi
+        - generic [ref=e202] [cursor=pointer]: Gujarati
+        - generic [ref=e205] [cursor=pointer]: Punjabi
+        - generic [ref=e208] [cursor=pointer]: Odia
+        - generic [ref=e209] [cursor=pointer]:
+          - generic [ref=e211]: English
+          - img [ref=e212]
+      - generic [ref=e164]:
+        - heading "Document Type" [level=3] [ref=e165]
+        - generic [ref=e166]:
+          - button "printed" [ref=e167] [cursor=pointer]
+          - button "handwritten" [ref=e168] [cursor=pointer]
+      - button "Extract Text" [ref=e170] [cursor=pointer]

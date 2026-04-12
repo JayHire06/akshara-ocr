@@ -2,30 +2,46 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, Histogram, Gauge, generate_latest
-import time
 
 from api.routers import auth, ocr, history, languages
 from api.db.database import engine, Base
-from slowapi.errors import RateLimitExceeded
-from slowapi import _rate_limit_exceeded_handler
-from api.security.rate_limiter import limiter
+from api.config import settings
+
+try:
+    from slowapi.errors import RateLimitExceeded
+    from slowapi import _rate_limit_exceeded_handler
+    from api.security.rate_limiter import limiter
+except ImportError:
+    RateLimitExceeded = None
+    _rate_limit_exceeded_handler = None
+    limiter = None
 
 app = FastAPI(title="Akshara OCR API")
 
+allow_origins = [
+    origin.strip()
+    for origin in settings.cors_allow_origins.split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allow_origins,
+    allow_origin_regex=settings.cors_allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+if limiter is not None:
+    app.state.limiter = limiter
+
+if RateLimitExceeded is not None and _rate_limit_exceeded_handler is not None:
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.on_event("startup")
 async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    Base.metadata.create_all(bind=engine)
 # Prometheus Metrics
 ocr_requests_total = Counter(
     "ocr_requests_total",

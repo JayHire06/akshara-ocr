@@ -1,7 +1,7 @@
 import React from 'react';
 import { FileText, Zap, Globe, Shield, Play } from 'lucide-react';
 
-export default function LandingScreen({ onStart }) {
+export default function LandingScreen({ onStart, demoCases = [] }) {
     const features = [
         {
             icon: <FileText size={24} className="feature-icon" />,
@@ -71,6 +71,23 @@ export default function LandingScreen({ onStart }) {
                 }}>
                     <Play fill="#000" size={24} style={{ marginLeft: '4px' }} />
                 </button>
+            </div>
+
+            <div className="demo-case-grid" style={{ width: '100%', maxWidth: '1100px', marginTop: 'var(--space-6)' }}>
+                {demoCases.map((demoCase) => (
+                    <article key={demoCase.id} className="demo-case-card">
+                        <img src={demoCase.assetPath} alt={demoCase.title} className="demo-case-image" />
+                        <div className="demo-case-body">
+                            <div className="demo-case-meta">
+                                <span>{demoCase.script}</span>
+                                <span>{demoCase.languageLabel}</span>
+                            </div>
+                            <h3>{demoCase.title}</h3>
+                            <p>{demoCase.note}</p>
+                            <pre className="demo-case-output">{demoCase.expectedText}</pre>
+                        </div>
+                    </article>
+                ))}
             </div>
 
             <div className="features-grid" style={{
