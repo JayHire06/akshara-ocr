@@ -49,13 +49,9 @@ fonts/
 # ──────────────────────────────────────────────
 # Model artifacts
 # ──────────────────────────────────────────────
-model/checkpoints/*.pth
-model/checkpoints/*.onnx
-model/checkpoints_200k/
-model/checkpoints_realistic_v2/
-
-# ONNX exports at the root (e.g. test.onnx)
-*.onnx
+# Ignore ephemeral per-epoch checkpoints globally across all v1-v5 checkpoints
+model/checkpoints*/checkpoint_*.pth
+ model/checkpoints*/run_*/*.pth
 
 # ──────────────────────────────────────────────
 # Debug / test output images at root
@@ -124,3 +120,8 @@ frontend/dist-ssr/
 .DS_Store
 Thumbs.db
 nul
+
+# ──────────────────────────────────────────────
+# Outputs (images, logs mapped here)
+# ──────────────────────────────────────────────
+outputs/
