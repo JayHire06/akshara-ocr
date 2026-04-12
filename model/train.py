@@ -3,7 +3,15 @@ import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import wandb
+try:
+    import wandb
+except (ImportError, TypeError):
+    class _DummyWandb:
+        def init(self, *args, **kwargs): pass
+        def log(self, *args, **kwargs): pass
+        def Table(self, *args, **kwargs): return self
+        def add_data(self, *args, **kwargs): pass
+    wandb = _DummyWandb()
 from tqdm import tqdm
 from model.crnn import CRNN
 from model.evaluate import evaluate_crr
@@ -60,8 +68,8 @@ def train(
         model.train()
         train_loss = 0.0
         
-        pbar = tqdm(train_loader, desc=f"Epoch {epoch}/{epochs}")
-        for images, targets, target_lengths in pbar:
+        print(f"\n--- Epoch {epoch}/{epochs} Started ---")
+        for batch_idx, (images, targets, target_lengths) in enumerate(train_loader):
             images = images.to(device)
             targets = targets.to(device)
             target_lengths = target_lengths.to(device)
@@ -81,6 +89,9 @@ def train(
             optimizer.step()
             train_loss += loss.item() * batch_size
             global_step += 1
+            
+            if batch_idx % 200 == 0:
+                print(f"  Epoch {epoch} | Batch {batch_idx}/{len(train_loader)} | Loss: {loss.item():.4f}")
             
             # W&B Sample Prediction Logging every 1000 steps
             if global_step % 1000 == 0:
