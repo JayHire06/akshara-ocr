@@ -1,14 +1,14 @@
 """
-Akshara-OCR  —  train_v6.py
+Akshara-OCR  —  train_v5.py
 ════════════════════════════
-Cutting-edge experimental branch built autonomously atop the v5 architecture.
+Production training script for the latest V5 edge-optimized run.
 
-Innovations:
-  • V6 Submodule: STN Spatial Transformer + MobileNet Depthwise Network
+Innovations (V5 Edge Architecture):
+  • Mapped Submodule: STN Spatial Transformer + MobileNet Depthwise Network
   • FocalCTCLoss: Aggressively upweights rare grammar artifacts avoiding empty blanks
   • Albumentations: Physical lens & optical simulated degradations directly inside the loader
 
-Checkpoints safely mapped out to: `model/checkpoints_v6_edge`
+Checkpoints explicitly mapped out to: `model/checkpoints_v5/`
 """
 from __future__ import annotations
 
@@ -48,9 +48,9 @@ VOCAB_FILE     = DATA_DIR / "vocab.json"
 
 sys.path.insert(0, str(ROOT_DIR))
 
-from data.dataset_v6 import OCRDatasetV6
-from model.crnn_v6 import CRNNv6
-from model.focal_ctc import FocalCTCLoss
+from data.dataset import OCRDatasetV6
+from model.crnn import CRNNv6
+from model.loss import FocalCTCLoss
 
 # Hyperparams
 CFG = {

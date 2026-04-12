@@ -1,0 +1,54 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700&amp;family=Manrope:wght@500;600&amp;display=swap');
+      
+      .title {
+        font-family: 'Outfit', -apple-system, sans-serif;
+        font-weight: 700;
+        font-size: 110px;
+        fill: #ffffff;
+        letter-spacing: -2px;
+      }
+
+      .subtitle {
+        font-family: 'Manrope', -apple-system, sans-serif;
+        font-weight: 600;
+        font-size: 18px;
+        fill: #c6f135;
+        letter-spacing: 8px;
+      }
+    </style>
+    
+    <!-- Ultra subtle geometric dot grid -->
+    <pattern id="dot-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.5" fill="#ffffff" fill-opacity="0.04"/>
+    </pattern>
+
+    <!-- Super soft, highly diffused ambient glow -->
+    <radialGradient id="soft-glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#c6f135" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#c6f135" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Solid Deep Dark Background matching React standard -->
+  <rect width="1200" height="400" fill="#06070a"/>
+  
+  <!-- Subtle minimal ambient lighting -->
+  <rect width="1200" height="400" fill="url(#soft-glow)"/>
+
+  <!-- Minimal dot pattern -->
+  <rect width="1200" height="400" fill="url(#dot-grid)"/>
+
+  <!-- Clean, minimalist layout with exact matching typography -->
+  <g transform="translate(600, 215)">
+    <text class="title" x="0" y="0" text-anchor="middle">
+      Akshara OCR
+    </text>
+    
+    <text class="subtitle" x="0" y="60" text-anchor="middle">
+      INTELLIGENT EDGE EXTRACTION
+    </text>
+  </g>
+</svg>

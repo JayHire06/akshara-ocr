@@ -65,7 +65,7 @@ except ImportError:
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
-ROOT_DIR       = Path(__file__).resolve().parent.parent.parent
+ROOT_DIR       = Path(__file__).resolve().parent.parent
 CHECKPOINT_DIR = ROOT_DIR / "model" / "checkpoints"
 DATA_DIR       = ROOT_DIR / "data" / "combined"
 TRAIN_LABELS   = DATA_DIR / "train_labels.txt"

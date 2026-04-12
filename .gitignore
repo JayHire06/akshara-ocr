@@ -48,10 +48,10 @@ fonts/
 
 # ──────────────────────────────────────────────
 # Model artifacts
-# ──────────────────────────────────────────────
 # Ignore ephemeral per-epoch checkpoints globally across all v1-v5 checkpoints
-model/checkpoints*/checkpoint_*.pth
- model/checkpoints*/run_*/*.pth
+# (LFS will handle the best_model.pth files, so we remove the general ignore here)
+# model/checkpoints*/checkpoint_*.pth
+# model/checkpoints*/run_*/*.pth
 
 # ──────────────────────────────────────────────
 # Debug / test output images at root

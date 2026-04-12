@@ -40,9 +40,8 @@ run_script_vX() {
     echo "✔️ Completed Version $identifier" | tee -a "$BENCHMARK_LOG"
 }
 
-run_script_vX "scripts/training/train_v3.py" "v3 (200K Extended Dictionary Pool)"
-run_script_vX "scripts/training/train_v4.py" "v4 (Realistic Handcrafted Document Pool)"
-run_script_vX "scripts/training/train_v5.py" "v5 (Current Best Production Candidate)"
+run_script_vX "scripts/training/train_v6.py" "v6 (MobileNet + STN Edge Candidate)"
+run_script_vX "scripts/training/train_v7.py" "v7 (V6 + Active Spelling Beam NLP Reranker Engine)"
 
 echo -e "\n==========================================================" | tee -a "$BENCHMARK_LOG"
 echo "  🏁 Subset Benchmarks Complete. Logs dumped at: $BENCHMARK_LOG" | tee -a "$BENCHMARK_LOG"

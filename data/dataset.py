@@ -103,9 +103,48 @@ class OCRDataset(Dataset):
             'language': language
         }
 
-if __name__ == '__main__':
-    # Example usage
-    # dataset = OCRDataset("synthetic", "synthetic/labels.csv", "vocab.json")
-    # if len(dataset) > 0:
-    #     print("Sample 0:", dataset[0])
-    pass
+import cv2
+try:
+    import albumentations as A
+    ALBUMENTATIONS_AVAILABLE = True
+except ImportError:
+    ALBUMENTATIONS_AVAILABLE = False
+
+class OCRDatasetV6(Dataset):
+    """Advanced V6 Dataset employing OpenCV and Albumentations for robust spatial simulated degradation mapping."""
+    def __init__(self, labels_file, vocab, is_training=True):
+        self.vocab = vocab
+        self.is_training = is_training
+        self.samples = []
+        with open(labels_file, encoding="utf-8") as f:
+            for line in f:
+                if "|" in line:
+                    path_p, label = line.strip().split("|", 1)
+                    if label: self.samples.append((path_p.strip(), label.strip()))
+        
+        self.transform = None
+        if ALBUMENTATIONS_AVAILABLE and self.is_training:
+            self.transform = A.Compose([
+                A.ShiftScaleRotate(shift_limit=0.03, scale_limit=0.05, rotate_limit=3, border_mode=cv2.BORDER_CONSTANT, value=255, p=0.4),
+                A.ElasticTransform(alpha=1, sigma=30, alpha_affine=20, p=0.3),
+                A.GridDistortion(num_steps=4, distort_limit=0.1, p=0.3),
+                A.GaussNoise(var_limit=(10.0, 50.0), p=0.2),
+                A.CoarseDropout(max_holes=5, max_height=4, max_width=8, fill_value=255, p=0.3)
+            ])
+
+    def __len__(self): return len(self.samples)
+
+    def __getitem__(self, idx):
+        path, label = self.samples[idx]
+        try:
+            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            if self.transform: img = self.transform(image=img)['image']
+            h, w = img.shape
+            new_w = max(1, int(w * 32 / max(h, 1)))
+            img_resized = cv2.resize(img, (new_w, 32), interpolation=cv2.INTER_LINEAR)
+            tensor = torch.from_numpy(img_resized.astype(np.float32) / 255.0).unsqueeze(0)
+        except Exception:
+            tensor = torch.zeros(1, 32, 64)
+        
+        encoded = [self.vocab[c] for c in label if c in self.vocab]
+        return tensor, torch.tensor(encoded, dtype=torch.long), label
