@@ -126,3 +126,28 @@
 4. **Data Management**: Scaled tracking mechanisms via targeted `.gitignore` and `Git LFS` implementations shielding storage buckets from ephemeral epoch weights while exclusively capturing `.onnx` outputs.
 
 **Status:** ALL PIPELINES FINALIZED ALONGSIDE MODEL METRICS VALIDATION TOOLS. 
+
+## 📅 WEEK 5 - EDGE OPTIMIZATION (THE V6 PIPELINE)
+
+**Key Objectives Successfully Handled:**
+With `v5` reaching parity for server-side evaluation, we aggressively isolated and constructed a `v6` codebase specifically designed to conquer raw physical device constraints without polluting historic training loops. 
+
+### 🧬 Architectural Decisions & Reasoning
+
+1. **Lightweight Deployment (MobileNet Submodules):** 
+   - *Reasoning:* Traditional CNN stacks explode parameter counts, preventing viable 60FPS scans on low-end iOS/Android hardware. 
+   - *Change:* Implemented **Depthwise Separable Convolution Blocks** inside `CRNNv6`. This slashed mathematical operations dramatically by separating channel filtration from spatial mapping, meaning the ONNX binary export shrinks drastically while speeding up CPU inference.
+
+2. **Warped Alignment Fixes (STN):**
+   - *Reasoning:* Real-world users photograph documents at steep angles or with curved pages, utterly breaking the rigidly horizontal assumptions of line-level CRNNs.
+   - *Change:* Attached a **Spatial Transformer Network (STN)** localized to the front of `CRNNv6`. This predicts a dynamic affine matrix native to the GPU to digitally "straighten" skewed text inside the forward pass before the CNN extracts features.
+
+3. **Imbalanced Grammar (Focal CTCLoss):**
+   - *Reasoning:* Conventional `nn.CTCLoss` models become statistically lazy on rare Hindi grammatical conjuncts, leaning blindly toward high-frequency vowels to artificially pad loss metrics.
+   - *Change:* Deployed **Focal CTC Loss**. By calculating the probability distribution dynamically (`p = exp(-loss)`) and multiplying the loss by `(1 - p)**gamma`, the gradient aggressively hyper-focuses on the rarest symbols the OCR traditionally misses.
+
+4. **Lens Degradation Profiling (Albumentations):**
+   - *Reasoning:* Pure PIL resizing techniques train a model exclusively on "perfectly flat" clean digital backgrounds. Real smartphone lenses have chromatic aberrations, physical dropout, and grid distortion.
+   - *Change:* Rebuilt the entire loader natively as `OCRDatasetV6` mounting OpenCV & Albumentations. It mathematically smears (`GridDistortion`), burns (`CoarseDropout`), and noisy-fies images randomly on-the-fly, ensuring `v6` treats awful camera quality as standard input.
+
+**Status:** The entire v6 branch (`crnn_v6.py`, `dataset_v6.py`, `focal_ctc.py`, `train_v6.py`) sits cleanly decoupled from the master pathing, ready for isolated Edge execution scaling.

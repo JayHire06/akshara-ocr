@@ -1,0 +1,23 @@
+{
+  "batch_size": 128,
+  "max_epochs": 30,
+  "max_lr": 0.0003,
+  "min_lr": 1e-06,
+  "pct_start": 0.1,
+  "weight_decay": 0.0001,
+  "grad_clip": 5.0,
+  "patience": 5,
+  "num_workers": 8,
+  "save_every": 5,
+  "keep_last_n": 3,
+  "in_channels": 1,
+  "lstm_hidden": 256,
+  "lstm_layers": 2,
+  "lstm_dropout": 0.3,
+  "vocab_size": 52,
+  "device": "cuda",
+  "git_hash": "f4ee391",
+  "started_at": "2026-04-13T00:18:39.623893",
+  "train_labels": "/home/ramcharan/Documents/akshara-ocr/data/combined/train_labels.txt",
+  "val_labels": "/home/ramcharan/Documents/akshara-ocr/data/combined/val_labels.txt"
+}

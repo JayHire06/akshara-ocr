@@ -12,6 +12,7 @@ except (ImportError, TypeError):
         def log(self, *args, **kwargs): pass
         def Table(self, *args, **kwargs): return self
         def add_data(self, *args, **kwargs): pass
+        def finish(self, *args, **kwargs): pass
     wandb = _DummyWandb()
 import numpy as np
 from PIL import Image
@@ -54,15 +55,15 @@ def collate_fn(batch):
 def start_training():
     print("Initializing Realistic Model Training Sequence")
     
-    train_dir = os.path.join(root_dir, 'data', 'realistic_synthetic', 'train')
-    train_csv = os.path.join(train_dir, 'labels.csv')
+    train_dir = os.path.join(root_dir, 'data', 'combined')
+    train_csv = os.path.join(train_dir, 'train_labels.txt')
     
     # Needs to capture all potential characters. Ideally uses main vocab.json but let's build from labels just in case
     vocab_path = os.path.join(root_dir, 'vocab_realistic.json') 
     
     print("Loading Realistic Datasets...")
     # Passing the full vocab path, it builds it if absent
-    train_dataset = OCRDataset(train_dir, train_csv, vocab_path=os.path.join(root_dir, 'vocab.json'))
+    train_dataset = OCRDataset(train_dir, train_csv, vocab_path=os.path.join(root_dir, 'vocab.json'), is_v5_format=True)
     
     vocab_dict = train_dataset.vocab
     vocab_size = len(vocab_dict)

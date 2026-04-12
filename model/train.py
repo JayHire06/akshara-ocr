@@ -11,6 +11,7 @@ except (ImportError, TypeError):
         def log(self, *args, **kwargs): pass
         def Table(self, *args, **kwargs): return self
         def add_data(self, *args, **kwargs): pass
+        def finish(self, *args, **kwargs): pass
     wandb = _DummyWandb()
 from tqdm import tqdm
 from model.crnn import CRNN

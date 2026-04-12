@@ -41,15 +41,15 @@ def collate_fn(batch):
 def start_training():
     print("Initializing 200K Model Training Sequence (Target: < 10% UNK validation)")
     
-    train_dir = os.path.join(root_dir, 'data', 'train')
-    val_dir = os.path.join(root_dir, 'data', 'val')
-    train_csv = os.path.join(train_dir, 'labels.csv')
-    val_csv = os.path.join(val_dir, 'labels.csv')
+    # Use the consolidated combined dataset for benchmark consistency
+    train_dir = os.path.join(root_dir, 'data', 'combined')
+    train_csv = os.path.join(train_dir, 'train_labels.txt')
+    val_csv = os.path.join(train_dir, 'val_labels.txt')
     vocab_path = os.path.join(root_dir, 'vocab.json')
     
     print("Loading Datasets...")
-    full_train_dataset = OCRDataset(train_dir, train_csv, vocab_path=vocab_path)
-    full_val_dataset = OCRDataset(val_dir, val_csv, vocab_path=vocab_path)
+    full_train_dataset = OCRDataset(train_dir, train_csv, vocab_path=vocab_path, is_v5_format=True)
+    full_val_dataset = OCRDataset(train_dir, val_csv, vocab_path=vocab_path, is_v5_format=True)
     
     train_subset_size = min(200_000, len(full_train_dataset))
     val_subset_size = min(10_000, len(full_val_dataset)) 

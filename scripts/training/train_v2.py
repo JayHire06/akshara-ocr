@@ -15,6 +15,9 @@ VAL_LABELS = os.path.join(ROOT_DIR, "data", "combined", "val_labels.txt")
 CHECKPOINT_DIR = os.path.join(ROOT_DIR, "model", "checkpoints_v2")
 VOCAB_FILE = os.path.join(ROOT_DIR, "vocab.json")
 
+# Fix for real documents test path
+REAL_TEST_DIR = os.path.join(ROOT_DIR, "data", "real_test", "hindi")
+
 # STEP 1 — Build vocab
 def build_vocab():
     all_chars = set()
@@ -252,12 +255,11 @@ def train():
         print("-" * 40)
 
         # Test on real documents
-        real_dir = r"c:\Users\jayhi\Downloads\akshara-ocr\data\real_test\hindi"
-        if os.path.exists(real_dir):
+        if os.path.exists(REAL_TEST_DIR):
             print("=== REAL DOCUMENT TEST ===")
-            for fname in sorted(os.listdir(real_dir))[:20]:
+            for fname in sorted(os.listdir(REAL_TEST_DIR))[:20]:
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    path = os.path.join(real_dir, fname)
+                    path = os.path.join(REAL_TEST_DIR, fname)
                     try:
                         img = Image.open(path).convert('L')
                         w, h = img.size
