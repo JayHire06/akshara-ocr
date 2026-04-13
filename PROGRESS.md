@@ -201,3 +201,60 @@ To ensure the production-readiness of the **V7 Engine**, we executed a cross-ver
    - *Change:* Purged all non-functional language options and English demo cases. The UI is now a specialized, high-performance **Hindi OCR Powerhouse**, ensuring zero-distraction extraction.
 
 **Status:** ALL BACKEND DEPENDENCIES REMOVED. APPLICATION IS NOW A PURE CLOUDLESS EDGE PLATFORM.
+
+---
+
+## 📅 WEEK 7 — EVALUATION POST-MORTEM & V9 PLANNING (2026-04-13)
+
+First post-v8 evaluation run exposed three stacked bugs that had been hiding real model performance. Fixes landed this week, v9 ("The Honest Leap") is now scaffolded and ready to train.
+
+### Bugs found & fixed
+
+1. **~80% text-level leakage in the train/val split.** 11,945 of 15,000 val samples had a target string that also appeared verbatim in train. Near-zero CER on v1/v3/v4 was memorization, not generalization.
+   - **Fix:** `scripts/data/rebuild_text_disjoint_split.py` — groups by unique text, partitions by text, guarantees 0 overlap. Old files preserved as `*.leaky.bak`.
+
+2. **Orphaned legacy CRNN in v2 and v5.** Both training scripts defined their own `class CRNN` with Sequential layout (`cnn.0.0.*` + `fc.*`). Current `model.crnn.CRNN` uses named blocks (`cnn.block*` + `linear.*`). `load_state_dict(strict=False)` silently dropped 100% of their weights → reported metrics were random-init noise (v5: 100% empty, v2: 99.82% CER).
+   - **Fix:** Both scripts now `from model.crnn import CRNN`. Old checkpoints retired via `scripts/retrain_legacy.sh`.
+
+3. **Silent strict=False loads across the benchmark harness.** Any architecture drift passed through unnoticed.
+   - **Fix:** `model/benchmark_eval.py` now raises `CheckpointLoadError` on (a) legacy Sequential layout, (b) unknown architectures, (c) any load with <90% parameter match. Both eval entry points print `INCOMPAT` instead of fake metrics.
+
+### v9 — "The Honest Leap" (scaffolded)
+
+See [`docs/v9-design.md`](docs/v9-design.md) for full spec. Fast-Track stack:
+
+- **A1** — BiLSTM replaced by a 6-layer Transformer encoder (`d_model=256, heads=8, d_ff=1024`, pre-norm, GELU). New `model/crnn_v9.py` class `CRNNv9`, ~5.87M params. STN and MobileNet CNN front-end unchanged.
+- **D4** — Character-frequency weighted sampler so rare glyphs (ऋ, ञ, ढ़, ॐ) get training signal.
+- **L1** — Focal CTC + label smoothing (ε=0.1).
+- **L3** — EMA of weights for inference (decay=0.999).
+- **DC2** — v7 spelling-beam reranker reused at decode time.
+
+Deferred to v9.1/v9.2: KenLM beam search, full encoder-decoder Transformer, font-diversity resynthesis, real-document mining.
+
+### Files added or modified
+
+```
+Added:
+  docs/v9-design.md
+  model/crnn_v9.py
+  scripts/training/train_v9.py
+  scripts/retrain_legacy.sh
+  scripts/data/rebuild_text_disjoint_split.py
+
+Modified:
+  scripts/training/train_v2.py                 # removed local CRNN class
+  scripts/training/train_v5.py                 # removed local CRNNv5 class
+  model/benchmark_eval.py                      # CheckpointLoadError + v9 detection
+  scripts/inference/evaluate_all_versions.py   # v9 discovery + loud failures
+  scripts/run_benchmarks.sh                    # v1-v9 sweep
+  frontend/src/components/LandingScreen.jsx    # v9 row in benchmark table
+```
+
+### Success criteria for v9.0 ship
+
+- CER on text-disjoint val ≤ 60% of v8's CER on the same split.
+- WER ≤ 70% of v8's WER.
+- Rare-glyph CER at least 30% lower than v8's.
+- Checkpoint loads cleanly through `CheckpointLoadError`-enforced harness.
+
+**Current Status:** Scaffolding complete. Awaiting compute for first full v9 training run + re-evaluation of v1–v8 on the text-disjoint split.
