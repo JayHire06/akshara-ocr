@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-04-13T13:13:08.653339",
+  "seed": 42,
+  "inputs": {
+    "synthetic_labels": [
+      "/home/ramcharan/Documents/akshara-ocr/data/external/iiit_synth_r_hindi/normalized/test_labels.txt"
+    ],
+    "morphed_labels": [],
+    "real_labels": [
+      "/home/ramcharan/Documents/akshara-ocr/data/external/mozhi_hindi/normalized/test_labels.txt",
+      "/home/ramcharan/Documents/akshara-ocr/data/external/iiit_hw_words_hindi/normalized/test_labels.txt"
+    ],
+    "iiit_train_labels": null
+  },
+  "source_counts": {
+    "synthetic": 145350,
+    "morphed": 0,
+    "real": 23042,
+    "effective_real": 23042
+  },
+  "iiit_holdout": null,
+  "benchmarks": [
+    {
+      "name": "synthetic_only",
+      "labels_file": "/home/ramcharan/Documents/akshara-ocr/data/benchmarks/v8_external/synthetic_only/labels.txt",
+      "sample_count": 10000,
+      "composition": {
+        "synthetic": 10000
+      },
+      "source_files": {
+        "/home/ramcharan/Documents/akshara-ocr/data/external/iiit_synth_r_hindi/normalized/test_labels.txt": 10000
+      }
+    },
+    {
+      "name": "real_only",
+      "labels_file": "/home/ramcharan/Documents/akshara-ocr/data/benchmarks/v8_external/real_only/labels.txt",
+      "sample_count": 10000,
+      "composition": {
+        "real": 10000
+      },
+      "source_files": {
+        "/home/ramcharan/Documents/akshara-ocr/data/external/iiit_hw_words_hindi/normalized/test_labels.txt": 5589,
+        "/home/ramcharan/Documents/akshara-ocr/data/external/mozhi_hindi/normalized/test_labels.txt": 4411
+      }
+    }
+  ],
+  "warnings": [
+    "Skipped synthetic_morphed_plus_real benchmark because both morphed and real pools are required."
+  ]
+}

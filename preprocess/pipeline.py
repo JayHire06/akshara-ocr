@@ -1,10 +1,10 @@
 import os
 from typing import List
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-from .binarize import otsu_binarize
+from .binarize import robust_binarize
 from .deskew import hough_deskew
 from .denoise import denoise
 from .segment import segment_lines
@@ -53,26 +53,43 @@ def remove_horizontal_lines(image: Image.Image) -> Image.Image:
         
     return out_img
 
+
+def flatten_background(image: Image.Image) -> Image.Image:
+    """
+    Reduce uneven illumination by subtracting a blurred background estimate.
+    This is especially useful for phone photos with shadows or gradients.
+    """
+    gray = image.convert('L')
+    blur_radius = max(6, min(gray.size) // 25) if gray.size else 6
+    blurred = gray.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+    arr = np.array(gray, dtype=np.int16)
+    bg = np.array(blurred, dtype=np.int16)
+    flattened = np.clip(arr - bg + 128, 0, 255).astype(np.uint8)
+    return Image.fromarray(flattened, mode='L')
+
 def preprocess(image: Image.Image, language: str = 'hi') -> List[Image.Image]:
     """
     Complete custom image preprocessing pipeline.
     Input: a PIL Image (color, grayscale, or binary)
     Output: list of PIL Images, each is a binarized line image, height=32px, values [0,1] float
     """
-    # 1. Convert colored images to grayscale before Otsu thresholding
+    # 1. Convert colored images to grayscale
     gray_image = image.convert('L')
-    
-    # 2. Add contrast enhancement using Pillow's ImageEnhance.Contrast
-    enhancer = ImageEnhance.Contrast(gray_image)
-    enhanced_image = enhancer.enhance(2.0)
-    
-    # 3. Apply Otsu Binarization
-    binary = otsu_binarize(enhanced_image)
-    
-    # 4. Remove horizontal lines from lined paper
+
+    # 2. Flatten lighting and then stretch contrast.
+    flattened = flatten_background(gray_image)
+    autocontrasted = ImageOps.autocontrast(flattened, cutoff=1)
+    enhancer = ImageEnhance.Contrast(autocontrasted)
+    enhanced_image = enhancer.enhance(1.8)
+
+    # 3. Use robust binarization with local-threshold fallback.
+    binary = robust_binarize(enhanced_image)
+
+    # 4. Remove horizontal lines from ruled paper
     cleaned_binary = remove_horizontal_lines(binary)
-    
-    # Continue pipeline
+
+    # 5. Continue pipeline
     deskewed = hough_deskew(cleaned_binary)
     denoised = denoise(deskewed)
     lines = segment_lines(denoised)

@@ -25,9 +25,9 @@ def hough_deskew(image: Image.Image) -> Image.Image:
     y_idxs, x_idxs = np.nonzero(edges)
     
     if len(x_idxs) > 20000:
-        choices = np.random.choice(len(x_idxs), 20000, replace=False)
-        x_idxs = x_idxs[choices]
-        y_idxs = y_idxs[choices]
+        step = max(1, len(x_idxs) // 20000)
+        x_idxs = x_idxs[::step][:20000]
+        y_idxs = y_idxs[::step][:20000]
         
     # 2. Compute the Hough accumulator for lines (theta, rho)
     thetas = np.deg2rad(np.arange(-45, 45, 0.5))
@@ -54,6 +54,8 @@ def hough_deskew(image: Image.Image) -> Image.Image:
     theta = np.rad2deg(thetas[theta_idx])
     
     # 4. Rotate the original image by -theta using PIL Image.rotate
+    # Ignore unrealistic large corrections; text-line skew should be modest.
+    theta = float(np.clip(theta, -15.0, 15.0))
     rotated_img = image.rotate(-theta, expand=True, fillcolor=255)
     
     if os.environ.get('DEBUG') == 'True':

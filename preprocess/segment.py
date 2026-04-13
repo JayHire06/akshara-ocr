@@ -53,27 +53,33 @@ def binarize(img):
     binary_arr = np.where(img_arr <= best_t, 1, 0).astype(np.uint8)
     return binary_arr
 
-def segment_lines(binary_arr):
+def segment_lines(image):
     """
-    Segments lines using horizontal projection.
+    Segments lines from a binary PIL Image using horizontal projection.
+    Input: PIL Image (mode 'L') where 0=ink/text, 255=background.
+    Returns: list of cropped PIL Images, one per detected text line.
     """
+    img_arr = np.array(image, dtype=np.uint8)
+
+    # Invert so that ink=1, background=0 for projection sums.
+    ink = (img_arr < 128).astype(np.uint8)
+
     # Compute horizontal projection: sum of each row
-    proj = np.sum(binary_arr, axis=1)
-    
+    proj = np.sum(ink, axis=1)
+
     # Smooth the projection with a 5-pixel running average
     window = 5
     kernel = np.ones(window) / window
     proj_smooth = np.convolve(proj, kernel, mode='same')
-    
+
     # Find line boundaries: a row is "text" if its smoothed sum > 0
-    # Using > 2 was too aggressive and dropped sparse/light lines on real images
     text_rows = proj_smooth > 0
-    
+
     # Collect start/end row indices of consecutive text rows
     segments = []
     in_segment = False
     start_idx = 0
-    
+
     for i, is_text in enumerate(text_rows):
         if is_text and not in_segment:
             in_segment = True
@@ -81,28 +87,34 @@ def segment_lines(binary_arr):
         elif not is_text and in_segment:
             in_segment = False
             segments.append((start_idx, i))
-            
+
     if in_segment:
         segments.append((start_idx, len(text_rows)))
-        
+
     # Merge line segments that are less than 8px apart
     if not segments:
         return []
-        
+
     merged_segments = [segments[0]]
     for current in segments[1:]:
         previous = merged_segments[-1]
-        
+
         if current[0] - previous[1] < 8:
             # merge
             merged_segments[-1] = (previous[0], current[1])
         else:
             merged_segments.append(current)
-            
-    # Filter out segments shorter than 8px height (relaxed from 10 to avoid dropping short lines)
-    final_segments = [s for s in merged_segments if (s[1] - s[0]) >= 8]
-    
-    return final_segments
+
+    # Filter out segments shorter than 10px height (too small to be a real text line)
+    final_segments = [s for s in merged_segments if (s[1] - s[0]) >= 10]
+
+    # Crop and return PIL Images
+    w = image.size[0]
+    line_images = []
+    for r_start, r_end in final_segments:
+        line_images.append(image.crop((0, r_start, w, r_end)))
+
+    return line_images
 
 def segment_words(line_binary_arr):
     """
@@ -211,33 +223,25 @@ def segment_page(image_path):
     from .pipeline import remove_horizontal_lines
     cleaned_pil = remove_horizontal_lines(pil_binary)
     
-    # Convert back to 0/1 binary_arr
-    cleaned_arr = np.array(cleaned_pil)
-    binary_arr = np.where(cleaned_arr == 0, 1, 0).astype(np.uint8)
-    
-    original_arr = np.array(gray_img)
-    
-    # Call segment_lines() to get line regions
-    line_bounds = segment_lines(binary_arr)
-    
+    # segment_lines now accepts a PIL Image and returns cropped PIL Images
+    line_images = segment_lines(cleaned_pil)
+
     page_words = []
-    
+
     # For each line:
-    for r_start, r_end in line_bounds:
-        line_binary = binary_arr[r_start:r_end, :]
-        line_original = original_arr[r_start:r_end, :]
-        
+    for line_pil in line_images:
+        # Convert to 0/1 binary for word segmentation
+        line_binary = np.where(np.array(line_pil) == 0, 1, 0).astype(np.uint8)
+
         # Call segment_words() on the line
         word_bounds = segment_words(line_binary)
-        
+
+        # Get original grayscale crop at same vertical position for output
+        # Use the line PIL image coordinates
         line_words = []
         for c_start, c_end in word_bounds:
-            # Crop word
-            word_arr = line_original[:, c_start:c_end]
-            
-            # Convert to PIL
-            word_img = Image.fromarray(word_arr)
-            
+            word_img = line_pil.crop((c_start, 0, c_end, line_pil.size[1]))
+
             # Resize to height=32px keeping aspect ratio
             w, h = word_img.size
             if h > 0:
@@ -245,7 +249,7 @@ def segment_page(image_path):
                 new_width = max(1, int(32 * aspect_ratio))
                 resized = word_img.resize((new_width, 32), Image.Resampling.LANCZOS)
                 line_words.append(resized)
-                
+
         page_words.append(line_words)
         
     # Return: list of lists (outer=lines, inner=word PIL images)

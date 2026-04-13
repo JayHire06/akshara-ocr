@@ -1,6 +1,7 @@
 import numpy as np
 import os
-from PIL import Image
+from PIL import Image, ImageFilter
+
 
 def otsu_binarize(image: Image.Image) -> Image.Image:
     # 1. Convert image to grayscale NumPy array (uint8)
@@ -49,3 +50,37 @@ def otsu_binarize(image: Image.Image) -> Image.Image:
         out_img.save('debug_otsu_binarize.png')
         
     return out_img
+
+
+def local_mean_binarize(image: Image.Image, window_size: int = 31, offset: float = 10.0) -> Image.Image:
+    img_gray = image.convert('L')
+    img_arr = np.array(img_gray, dtype=np.uint8)
+    if window_size % 2 == 0:
+        window_size += 1
+
+    radius = max(1, window_size // 2)
+    mean_arr = np.array(img_gray.filter(ImageFilter.BoxBlur(radius=radius)), dtype=np.float32)
+    global_mean = float(np.mean(img_arr))
+    threshold = mean_arr - offset + np.maximum(0.0, (global_mean - mean_arr) * 0.5)
+    binary_arr = np.where(img_arr > threshold, 255, 0).astype(np.uint8)
+    return Image.fromarray(binary_arr, mode='L')
+
+
+def robust_binarize(image: Image.Image) -> Image.Image:
+    """
+    Prefer Otsu on clean scans, but fall back to local thresholding when the
+    foreground ratio from Otsu looks unrealistic for document text.
+    """
+    otsu_img = otsu_binarize(image)
+    otsu_arr = np.array(otsu_img, dtype=np.uint8)
+    ink_ratio = float(np.mean(otsu_arr == 0))
+
+    # Text on documents typically occupies a modest portion of the crop.
+    # If Otsu produces an almost blank or almost full-ink page, local
+    # thresholding is usually more stable under uneven lighting.
+    if 0.01 <= ink_ratio <= 0.55:
+        return otsu_img
+
+    min_dim = min(image.size) if image.size else 32
+    window = max(15, min(51, (min_dim // 6) | 1))
+    return local_mean_binarize(image, window_size=window, offset=10.0)
