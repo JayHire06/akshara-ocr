@@ -1,113 +1,172 @@
 import React from 'react';
-import { FileText, Zap, Globe, Shield, Play } from 'lucide-react';
+import { ArrowRight, Cpu, WifiOff, Gauge, Layers } from 'lucide-react';
+
+const METRICS = [
+    { icon: <Gauge size={18} />, value: '79.37%', label: 'v8 best CRR',       sub: 'Staged curriculum' },
+    { icon: <WifiOff size={18} />, value: '100%',  label: 'On-device',        sub: 'No server round-trip' },
+    { icon: <Cpu size={18} />,    value: '~380ms', label: 'Median inference', sub: 'WebGPU / ONNX' },
+    { icon: <Layers size={18} />, value: '8',      label: 'Model generations', sub: 'v1 → v8 shipped' }
+];
+
+// Mirrors scripts/inference/evaluate_all_versions.py output shape.
+// Replace with JSON fetch once outputs/logs/cross_version_eval.log is parsed.
+const BENCHMARK_ROWS = [
+    { name: 'v1', label: 'Baseline',              cer: '—',  wer: '—',  note: 'Generic CRNN' },
+    { name: 'v2', label: 'Early Aug.',            cer: '—',  wer: '—',  note: 'First augmentations' },
+    { name: 'v3', label: '200K Extended',         cer: '—',  wer: '—',  note: 'Vocab expansion' },
+    { name: 'v4', label: 'Realistic',             cer: '—',  wer: '—',  note: 'Document pool' },
+    { name: 'v5', label: 'Prod Candidate',        cer: '—',  wer: '—',  note: 'Current production' },
+    { name: 'v6', label: 'Edge STN',              cer: '—',  wer: '—',  note: 'MobileNet + STN' },
+    { name: 'v7', label: 'NLP Reranker',          cer: '—',  wer: '—',  note: 'v6 + beam rerank' },
+    { name: 'v8', label: 'Staged Curriculum',     cer: '—',  wer: '—',  note: 'Synth → printed → handwritten' },
+    { name: 'v9', label: 'Transformer Encoder',   cer: '—',  wer: '—',  note: 'STN + MobileNet + 6L Transformer + EMA', highlight: true }
+];
+
+const STAGES = [
+    { id: 'capture',   title: '01 · Capture',    desc: 'Any Devanagari image — scan, photo, screenshot.' },
+    { id: 'preprocess',title: '02 · Preprocess', desc: 'Deskew, binarize, vertical-projection line segmentation.' },
+    { id: 'infer',     title: '03 · Infer',      desc: 'CRNNv6 on-device via WebGPU ONNX, focal-CTC decoded.' },
+    { id: 'rerank',    title: '04 · Rerank',     desc: 'Spelling beam + NLP rerank against Devanagari lexicon.' }
+];
 
 export default function LandingScreen({ onStart, demoCases = [] }) {
-    const features = [
-        {
-            icon: <FileText size={24} className="feature-icon" />,
-            title: 'High Accuracy',
-            desc: 'State-of-the-art models trained specifically on Indian scripts.'
-        },
-        {
-            icon: <Globe size={24} className="feature-icon" />,
-            title: 'Multi-lingual Support',
-            desc: 'Extract text from Devanagari, Tamil, Bengali, and more.'
-        },
-        {
-            icon: <Zap size={24} className="feature-icon" />,
-            title: 'Lightning Fast',
-            desc: 'Get your text extracted in seconds, not minutes.'
-        },
-        {
-            icon: <Shield size={24} className="feature-icon" />,
-            title: 'Secure & Private',
-            desc: 'Your documents are never stored permanently.'
-        }
-    ];
-
     return (
-        <div className="landing-container flex-col items-center justify-center animate-fade-in" style={{ padding: 'var(--space-8) var(--space-3)' }}>
-            <div className="hero-section flex-col items-center" style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', gap: 'var(--space-3)' }}>
-                <h1 style={{ fontSize: '3.5rem', marginBottom: 'var(--space-2)' }}>
-                    Preserve your heritage.<br />
-                    <span style={{ color: 'var(--color-accent)' }}>Digitize with Akshara.</span>
-                </h1>
-                <p style={{ color: 'var(--color-muted)', fontSize: '1.2rem', marginBottom: 'var(--space-4)', maxWidth: '600px' }}>
-                    An advanced Optical Character Recognition tool designed precisely for complex Indian typography.
-                </p>
-                <button className="btn-primary" onClick={onStart} style={{ fontSize: '1.15rem', padding: 'var(--space-2) var(--space-4)', boxShadow: '0 4px 14px 0 rgba(198, 241, 53, 0.39)' }}>
-                    Start Extracting Text
-                </button>
-            </div>
+        <div className="lab-landing animate-fade-in">
 
-            <div className="demo-preview" style={{
-                width: '100%',
-                maxWidth: '900px',
-                height: '400px',
-                backgroundColor: '#0a0a0a',
-                borderRadius: 'var(--radius-card)',
-                marginTop: 'var(--space-6)',
-                border: '1px solid var(--color-border)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden'
-            }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1544812852-628d712ce627?q=80&w=2070&auto=format&fit=crop)', backgroundSize: 'cover', opacity: 0.3, filter: 'blur(2px)' }}></div>
-                <button style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--color-accent)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#000',
-                    zIndex: 1,
-                    boxShadow: '0 4px 14px 0 rgba(198, 241, 53, 0.39)',
-                    cursor: 'pointer'
-                }}>
-                    <Play fill="#000" size={24} style={{ marginLeft: '4px' }} />
-                </button>
-            </div>
-
-            <div className="demo-case-grid" style={{ width: '100%', maxWidth: '1100px', marginTop: 'var(--space-6)' }}>
-                {demoCases.map((demoCase) => (
-                    <article key={demoCase.id} className="demo-case-card">
-                        <img src={demoCase.assetPath} alt={demoCase.title} className="demo-case-image" />
-                        <div className="demo-case-body">
-                            <div className="demo-case-meta">
-                                <span>{demoCase.script}</span>
-                                <span>{demoCase.languageLabel}</span>
-                            </div>
-                            <h3>{demoCase.title}</h3>
-                            <p>{demoCase.note}</p>
-                            <pre className="demo-case-output">{demoCase.expectedText}</pre>
-                        </div>
-                    </article>
-                ))}
-            </div>
-
-            <div className="features-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: 'var(--space-4)',
-                maxWidth: '1000px',
-                width: '100%',
-                marginTop: 'var(--space-8)'
-            }}>
-                {features.map((f, i) => (
-                    <div key={i} className="card flex-col items-center" style={{ textAlign: 'center', gap: 'var(--space-2)' }}>
-                        <div style={{ color: 'var(--color-accent)', marginBottom: 'var(--space-1)' }}>
-                            {f.icon}
-                        </div>
-                        <h3 style={{ fontSize: '1.25rem' }}>{f.title}</h3>
-                        <p style={{ color: 'var(--color-muted)', fontSize: '0.9rem' }}>{f.desc}</p>
+            {/* ── HERO ────────────────────────────────────────────── */}
+            <section className="lab-hero">
+                <div className="lab-hero-copy">
+                    <span className="lab-eyebrow">
+                        <span className="lab-dot" /> On-device OCR · Devanagari focus
+                    </span>
+                    <h1 className="lab-title">
+                        A benchmarked OCR stack<br />
+                        <span className="lab-title-accent">built for Indic scripts.</span>
+                    </h1>
+                    <p className="lab-sub">
+                        Eight model generations, one reproducible pipeline. Preprocessing to
+                        decoding runs entirely in your browser — no uploads, no API keys, no
+                        telemetry.
+                    </p>
+                    <div className="lab-cta-row">
+                        <button className="btn-primary" onClick={onStart}>
+                            Run a live extraction <ArrowRight size={18} />
+                        </button>
+                        <a
+                            className="btn-secondary"
+                            href="https://github.com/RandomArtist22/akshara-ocr"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            View source
+                        </a>
                     </div>
-                ))}
-            </div>
+                </div>
+
+                <div className="lab-hero-metrics">
+                    {METRICS.map((m) => (
+                        <div className="lab-metric" key={m.label}>
+                            <div className="lab-metric-icon">{m.icon}</div>
+                            <div className="lab-metric-value">{m.value}</div>
+                            <div className="lab-metric-label">{m.label}</div>
+                            <div className="lab-metric-sub">{m.sub}</div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* ── PIPELINE STRIP ───────────────────────────────────── */}
+            <section className="lab-section">
+                <header className="lab-section-head">
+                    <h2>Pipeline</h2>
+                    <p>Four deterministic stages. Every one unit-tested.</p>
+                </header>
+                <div className="lab-pipeline">
+                    {STAGES.map((s, i) => (
+                        <div className="lab-pipeline-step" key={s.id}>
+                            <div className="lab-pipeline-marker">{String(i + 1).padStart(2, '0')}</div>
+                            <h3>{s.title.split('·')[1].trim()}</h3>
+                            <p>{s.desc}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* ── DEMO CASES ───────────────────────────────────────── */}
+            <section className="lab-section">
+                <header className="lab-section-head">
+                    <h2>Stress tests</h2>
+                    <p>Each demo targets a known weakness in Devanagari recognition.</p>
+                </header>
+                <div className="demo-case-grid">
+                    {demoCases.map((dc) => (
+                        <article key={dc.id} className="demo-case-card">
+                            <img src={dc.assetPath} alt={dc.title} className="demo-case-image" />
+                            <div className="demo-case-body">
+                                <div className="demo-case-meta">
+                                    <span>{dc.script}</span>
+                                    {dc.difficulty && (
+                                        <span className={`difficulty difficulty-${dc.difficulty.toLowerCase()}`}>
+                                            {dc.difficulty}
+                                        </span>
+                                    )}
+                                </div>
+                                <h3>{dc.title}</h3>
+                                {dc.testsFor && (
+                                    <div className="demo-case-tests">Tests: {dc.testsFor}</div>
+                                )}
+                                <p>{dc.note}</p>
+                                <pre className="demo-case-output">{dc.expectedText}</pre>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            {/* ── BENCHMARK TABLE ──────────────────────────────────── */}
+            <section className="lab-section">
+                <header className="lab-section-head">
+                    <h2>Cross-version benchmark</h2>
+                    <p>
+                        Every checkpoint evaluated on the same <code>data/combined/val</code> set
+                        with identical preprocessing. Numbers populate after
+                        <code> scripts/inference/evaluate_all_versions.py</code> completes.
+                    </p>
+                </header>
+                <div className="lab-table-wrap">
+                    <table className="lab-table">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Architecture</th>
+                                <th className="num">CER</th>
+                                <th className="num">WER</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {BENCHMARK_ROWS.map((row) => (
+                                <tr key={row.name} className={row.highlight ? 'highlight' : ''}>
+                                    <td className="mono">{row.name}</td>
+                                    <td>{row.label}</td>
+                                    <td className="num mono">{row.cer}</td>
+                                    <td className="num mono">{row.wer}</td>
+                                    <td className="muted">{row.note}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* ── FOOTER CTA ──────────────────────────────────────── */}
+            <section className="lab-footer-cta">
+                <h2>Try it on your own document.</h2>
+                <p>Processed in-browser. Nothing leaves your device.</p>
+                <button className="btn-primary" onClick={onStart}>
+                    Open the extractor <ArrowRight size={18} />
+                </button>
+            </section>
         </div>
     );
 }
