@@ -79,11 +79,14 @@ class MobileNetBlock(nn.Module):
         return self.relu(self.bn(self.pointwise(self.depthwise(x))))
 
 class CRNNv6(nn.Module):
-    """V6 Architecture: STN + MobileNet CNN + BiLSTM"""
+    """V6 Architecture: STN (Optional) + MobileNet CNN + BiLSTM"""
     def __init__(self, vocab_size: int, config: dict):
         super(CRNNv6, self).__init__()
         self.in_channels = config.get('in_channels', 1)
-        self.stn = STN(in_channels=self.in_channels)
+        self.use_stn = config.get('use_stn', True)
+        if self.use_stn:
+            self.stn = STN(in_channels=self.in_channels)
+            
         self.cnn = nn.Sequential(
             MobileNetBlock(self.in_channels, 64),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -101,7 +104,8 @@ class CRNNv6(nn.Module):
         self.fc = nn.Linear(h * 2, vocab_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.stn(x)
+        if self.use_stn:
+            x = self.stn(x)
         x = self.cnn(x).squeeze(2).permute(2, 0, 1)
         x, _ = self.rnn(x)
         return nn.functional.log_softmax(self.fc(x), dim=2)

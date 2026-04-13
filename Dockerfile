@@ -26,7 +26,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
-COPY . /app
+# Copy application source
+COPY api/ /app/api/
+COPY model/ /app/model/
+COPY nlp/ /app/nlp/
+COPY requirements.txt /app/
+COPY README.md /app/
+
+# Set Python Path to include /app for cross-module imports
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

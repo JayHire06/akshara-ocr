@@ -2,37 +2,55 @@
   <img src="./docs/assets/banner.svg" width="100%" alt="Akshara OCR Banner">
 </div>
 
-# Akshara OCR
+# Akshara OCR (V7 Standalone)
 
-Akshara OCR is an intelligent pipeline and application designed to recognize text accurately from complex documents. 
+Akshara OCR is a high-performance, **native-first** Optical Character Recognition platform designed specifically for Devanagari (Hindi) script. 
 
-## Development Prerequisites
+> [!IMPORTANT]
+> **V7 Architecture Shift**: As of version 7, Akshara OCR has migrated to a **fully standalone, decentralized architecture**. All inference, layout analysis, and history management occurs 100% on the user's device using hardware-accelerated WebGPU. The V7 engine features **Focal Loss optimization** for improved recognition of complex Hindi conjuncts.
 
-To successfully run Akshara OCR on your local machine, ensure you have the following installed:
+## Key Features
 
-1. **Docker / Docker Desktop**: Required for spinning up the core backend services (PostgreSQL, Redis, Celery Workers, and the Model Server).
-2. **Node.js & npm**: Required to install dependencies and run the frontend interface.
-3. **Git LFS**: Required explicitly to handle multi-gigabyte machine learning model binaries (`*.pth`, `*.onnx`) effectively.
+1. **Hardware-Accelerated Inference**: Uses `onnxruntime-web` with WebGPU support to run V6 Hindi models at lightning speeds directly in the browser.
+2. **Intelligent Line Segmentation**: Automatically detects and separates multiple lines of text in a document using Vertical Projection Profiling.
+3. **100% Privacy**: No images or extracted text ever leave your device. All data is persisted locally via `localStorage`.
+4. **Offline Capability**: Progressive Web App (PWA) ready and easily wrapper-compatible with CapacitorJS/Tauri.
 
 ## Quickstart
 
-Start the entire stack (both frontend and backend) simultaneously with a single command:
+Since the application is now standalone, you only need to serve the frontend:
 
-**On Windows:**
-```cmd
-.\start_dev.bat
-```
-
-**On Linux / macOS / Git Bash:**
 ```bash
-bash ./start_dev.sh
+cd frontend
+npm install
+npm run dev
 ```
 
-By default, the backend API operates on `http://localhost:8000` while the frontend is served at `http://localhost:5173`.
+The application will be available at `http://localhost:5173`. No Docker installation or database setup is required for OCR extraction.
 
-## Mobile Support (Native Offline Inference)
+## Development & Research
 
-Akshara-OCR natively supports fully offline extraction locally via WASM mapping using **CapacitorJS**. You do not need the Python backend active if running the Native application!
+While the **App** is standalone, the project includes raw training and evaluation assets for researchers:
+
+### 1. Training (V1-V7)
+Access the evolution of the Akshara models in `/scripts/training/`. V7 focuses on focal-loss optimization for sparse grammatical conjuncts.
+
+### 2. Native Benchmarks
+Run pure-Python evaluation metrics (CER/WER) against historical checkpoints:
+```bash
+python scripts/inference/evaluate_all_versions.py
+```
+
+### 3. Git LFS
+**Critical**: You must have [Git LFS](https://git-lfs.github.com/) installed to pull the large `.onnx` and `.pth` binaries.
+
+```bash
+git lfs pull
+```
+
+## Mobile Support (Native Inference)
+
+Akshara-OCR supports fully offline extraction locally via WASM mapping using **CapacitorJS**. 
 
 <div align="center">
   <img src="./docs/assets/mobile_mockup.svg" width="45%" alt="Akshara Mobile Scan Screen">
@@ -41,22 +59,8 @@ Akshara-OCR natively supports fully offline extraction locally via WASM mapping 
 
 ```bash
 cd frontend
-npm install
 npx cap open android
 ```
 
-## Training & Model Benchmarking
-
-Akshara-OCR organizes its logic sequentially across `/scripts/training/` encompassing 5 developmental paradigm shifts (v1 through v5).
-
-To re-train all core OCR variations from scratch and natively compare their isolated metrics, launch the benchmark orchestrator:
-
-```bash
-./scripts/run_benchmarks.sh
-```
-
-Once runs complete, execute the validation suite. This will evaluate your `best_model` binaries against explicitly unseen real-world Hindi handwritten templates to verify performance:
-
-```bash
-python scripts/inference/evaluate_all_versions.py
-```
+---
+*Built with ❤️ for the Indian Typography community.*

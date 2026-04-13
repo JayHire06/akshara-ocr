@@ -39,26 +39,25 @@ def export_to_onnx(model_path, vocab_path, output_path, model_version="v6"):
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     
-    # Dummy input (Batch, Channels, Height, Width) -> Width is dynamic
-    dummy_input = torch.randn(1, 1, 32, 128)
-    
-    # Define dynamic axes natively so the browser can pass heavily variable width strings
-    dynamic_axes = {
-        'input':  {0: 'batch_size', 3: 'width'},
-        'output': {1: 'batch_size', 0: 'sequence_length'}
-    }
+    # Use a generic dummy input
+    dummy_input = torch.randn(1, 1, 32, 256)
     
     print(f"[*] Compiling ONNX Graph to {output_path}...")
+    # Explicitly disable dynamo as it struggles with RNN flattening and Python 3.14 compatibility
     torch.onnx.export(
         model,
         dummy_input,
         output_path,
         export_params=True,
-        opset_version=14,
+        opset_version=20,
         do_constant_folding=True,
         input_names=['input'],
         output_names=['output'],
-        dynamic_axes=dynamic_axes
+        dynamic_axes={
+            'input': {0: 'batch_size', 3: 'width'},
+            'output': {1: 'batch_size', 0: 'sequence_length'}
+        },
+        dynamo=False
     )
     
     print(f"[✓] Deployment Successful! Model size: {os.path.getsize(output_path) / (1024*1024):.2f} MB")

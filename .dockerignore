@@ -1,0 +1,47 @@
+# Dependencies
+venv/
+.venv/
+node_modules/
+frontend/node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+lib/
+lib64/
+bin/
+include/
+share/
+
+# Large OCR Data & Checkpoints
+data/
+model/checkpoints_v6_edge/*/
+model/checkpoints_v7_nlp/*/
+outputs/
+preprocess/
+
+# Git & Logs
+.git/
+.github/
+.gitignore
+.gitattributes
+*.log
+logs/
+
+# Development Tools
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Project Assets (Frontend source is usually built separately or ignored for API image)
+frontend/
+docs/
+tests/
+scripts/training/
+scripts/dataset/

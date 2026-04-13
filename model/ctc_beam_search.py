@@ -1,108 +1,123 @@
 import torch
+import math
 from collections import defaultdict
+
+def log_sum_exp(a, b):
+    """Semi-stable logsumexp in native python to avoid tensor creation overhead."""
+    if a == float("-inf"): return b
+    if b == float("-inf"): return a
+    if a > b:
+        return a + math.log1p(math.exp(b - a))
+    else:
+        return b + math.log1p(math.exp(a - b))
+
+def greedy_decoder(log_probs_seq, vocab_inv, blank_id=0):
+    """
+    Lightning fast greedy decoder for bulk validation.
+    Args:
+        log_probs_seq: (T, V) tensor or array of log probabilities
+        vocab_inv: Dictionary mapping index to character
+    """
+    arg_maxes = torch.argmax(log_probs_seq, dim=-1)
+    decode = []
+    for i in range(len(arg_maxes)):
+        idx = arg_maxes[i].item()
+        if idx != blank_id:
+            if i > 0 and idx == arg_maxes[i-1].item():
+                continue
+            char = vocab_inv.get(idx, "")
+            if char:
+                decode.append(char)
+    return "".join(decode)
 
 def ctc_beam_search_decoder(log_probs_seq, vocab_inv, beam_width=5, blank_id=0):
     """
-    Native Python CTC Prefix Beam Search algorithm.
-    Extracts the Top-K most probable strings from the neural network dynamically.
-    
-    Args:
-        log_probs_seq: (T, vocab_size) tensor of log probabilities for a SINGLE sequence
-        vocab_inv: Dictionary mapping index to character
-        beam_width: Number of branches to maintain
+    Optimized Python CTC Prefix Beam Search algorithm.
+    Refactored to minimize tensor creation overhead and use fast math.
     """
-    # Beam contains tuples of (prefix_sequence, p_blank, p_non_blank)
-    # p_blank: log probability that the prefix ends in a blank
-    # p_non_blank: log probability that the prefix ends in a non-blank
     T, V = log_probs_seq.shape
     
-    # Initialize with empty prefix
+    # Initialize with empty prefix: (p_blank, p_non_blank)
     beam = {(): (0.0, float('-inf'))} 
     
+    # Pre-calculate top-k indices and values to avoid redundant torch operations
+    top_k_vals, top_k_idxs = torch.topk(log_probs_seq, k=min(V, beam_width * 2), dim=-1)
+    top_k_vals = top_k_vals.tolist()
+    top_k_idxs = top_k_idxs.tolist()
+    
     for t in range(T):
-        curr_probs = log_probs_seq[t] # (V,)
         next_beam = defaultdict(lambda: (float('-inf'), float('-inf')))
         
-        # We only consider the top characters to avoid massive scaling slowdowns mapping
-        top_k_probs, top_k_indices = torch.topk(curr_probs, k=min(V, beam_width * 2))
+        # Current time step top k
+        t_indices = top_k_idxs[t]
+        t_probs = top_k_vals[t]
         
         for prefix, (p_b, p_nb) in beam.items():
-            for i in range(len(top_k_indices)):
-                char_idx = top_k_indices[i].item()
-                char_prob = top_k_probs[i].item()
+            for i in range(len(t_indices)):
+                char_idx = t_indices[i]
+                char_prob = t_probs[i]
                 
                 # If we pick a blank
                 if char_idx == blank_id:
                     n_p_b, n_p_nb = next_beam[prefix]
-                    
-                    # Log-sum-exp trick natively mapping for merging prefixes
-                    # Math: log(exp(val1) + exp(val2)) natively built by PyTorch but doing it simply
-                    merged_p = torch.logaddexp(torch.tensor(n_p_b), torch.tensor(p_b) + char_prob)
-                    merged_p = torch.logaddexp(merged_p, torch.tensor(p_nb) + char_prob)
-                    next_beam[prefix] = (merged_p.item(), n_p_nb)
+                    new_p_b = log_sum_exp(n_p_b, log_sum_exp(p_b, p_nb) + char_prob)
+                    next_beam[prefix] = (new_p_b, n_p_nb)
                     continue
                     
-                # If we pick a normal character
                 char = vocab_inv.get(char_idx, "")
-                if not char:
-                    continue
+                if not char: continue
                     
-                # Extend the prefix
                 extended_prefix = prefix + (char,)
                 n_p_b, n_p_nb = next_beam[extended_prefix]
                 
-                # If character is same as the last character and no blank between them
                 if len(prefix) > 0 and char == prefix[-1]:
-                    # Transition from blank ONLY guarantees identical characters are collapsed into a new independent sequence
-                    p_add_from_blank = p_b + char_prob
-                    merged_p_nb = torch.logaddexp(torch.tensor(n_p_nb), torch.tensor(p_add_from_blank))
-                    next_beam[extended_prefix] = (n_p_b, merged_p_nb.item())
+                    # Case 1: Identical char with blank between them (new prefix)
+                    new_p_nb = log_sum_exp(n_p_nb, p_b + char_prob)
+                    next_beam[extended_prefix] = (n_p_b, new_p_nb)
                     
-                    # Extending current identically ends the repeating sequence
-                    n_p_b_old, n_p_nb_old = next_beam[prefix]
-                    merged_p_nb_old = torch.logaddexp(torch.tensor(n_p_nb_old), torch.tensor(p_nb) + char_prob)
-                    next_beam[prefix] = (n_p_b_old, merged_p_nb_old.item())
-                    
+                    # Case 2: Identical char without blank (collapse into existing prefix)
+                    n_p_b_ex, n_p_nb_ex = next_beam[prefix]
+                    new_p_nb_ex = log_sum_exp(n_p_nb_ex, p_nb + char_prob)
+                    next_beam[prefix] = (n_p_b_ex, new_p_nb_ex)
                 else: 
                     # Standard transition
-                    p_add = torch.logaddexp(torch.tensor(p_b), torch.tensor(p_nb)) + char_prob
-                    merged_p_nb = torch.logaddexp(torch.tensor(n_p_nb), p_add)
-                    next_beam[extended_prefix] = (n_p_b, merged_p_nb.item())
+                    new_p_nb = log_sum_exp(n_p_nb, log_sum_exp(p_b, p_nb) + char_prob)
+                    next_beam[extended_prefix] = (n_p_b, new_p_nb)
                     
         # Prune the beam
-        beam = dict(sorted(next_beam.items(), key=lambda x: torch.logaddexp(torch.tensor(x[1][0]), torch.tensor(x[1][1])).item(), reverse=True)[:beam_width])
+        beam = dict(sorted(next_beam.items(), key=lambda x: log_sum_exp(x[1][0], x[1][1]), reverse=True)[:beam_width])
         
     final_candidates = []
     for prefix, (p_b, p_nb) in beam.items():
-        total_p = torch.logaddexp(torch.tensor(p_b), torch.tensor(p_nb)).item()
+        total_p = log_sum_exp(p_b, p_nb)
         final_candidates.append(("".join(prefix), total_p))
         
     return final_candidates
 
 def nlp_reranker(raw_candidates, spell_checker, threshold_edit_distance=2):
     """
-    The linguistic brain mapping. Evaluates candidate strings across the Native dictionary.
+    Reranks Beam Search candidates using the linguistic spell checker Trie.
     """
-    for candidate_string, prob in raw_candidates:
-        if not candidate_string:
-            continue
-            
-        # Parse individual words inside the sentence string mapping
+    if not raw_candidates: return ""
+    
+    # We only rerank the top few choices to keep latency low
+    for candidate_string, _ in raw_candidates[:max(1, len(raw_candidates)//2)]:
+        if not candidate_string: continue
+        
         words = candidate_string.split()
-        reranked_sentence = []
-        is_perfectly_valid = True
+        reranked_words = []
+        all_found = True
         
         for w in words:
-            # Check native dictionary Trie
             correction = spell_checker.correct(w, max_edit_distance=threshold_edit_distance, return_all=False)
             if correction:
-               reranked_sentence.append(correction)
+               reranked_words.append(correction)
             else:
-               reranked_sentence.append(w)
-               is_perfectly_valid = False
+               reranked_words.append(w)
+               all_found = False
                
-        # If we successfully parsed the top candidate against the dictionary, map it out safely natively
-        return " ".join(reranked_sentence)
-        
-    # Fallback to greedy 1st candidate if nothing computes completely
-    return "".join(raw_candidates[0][0]) if raw_candidates else ""
+        if all_found:
+            return " ".join(reranked_words)
+            
+    # Fallback to the most probable raw candidate
+    return raw_candidates[0][0]

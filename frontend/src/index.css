@@ -136,6 +136,23 @@ input, textarea {
   box-shadow: none;
 }
 
+.icon-btn {
+  padding: 10px;
+  border-radius: 12px;
+  color: var(--color-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.icon-btn:hover {
+  background: rgba(198, 241, 53, 0.1);
+  color: var(--color-accent);
+  border-color: var(--color-border);
+}
+
 .btn-secondary {
   background: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, 0.1);

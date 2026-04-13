@@ -5,25 +5,20 @@ import ProcessingScreen from './components/ProcessingScreen';
 import ResultsScreen from './components/ResultsScreen';
 import HistoryScreen from './components/HistoryScreen';
 import ErrorScreen from './components/ErrorScreen';
-import AuthScreen from './components/AuthScreen';
 import SettingsScreen from './components/SettingsScreen';
-import { api, setAuthToken } from './services/api';
+import { localHistory } from './services/localHistory';
 import { demoCases } from './data/demoCases';
-import { Settings } from 'lucide-react';
+import { Settings, History, PlusSquare } from 'lucide-react';
 import { runLocalInference } from './services/onnxInference';
 import './index.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('landing'); // Landing is first
-
-  // User State
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Upload State
+  const [currentView, setCurrentView] = useState('landing');
   const [selectedFile, setSelectedFile] = useState(null);
-  const [selectedLanguage, setSelectedLanguage] = useState('');
-
-  // Result State
+  const [selectedLanguage, setSelectedLanguage] = useState('hin');
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  // OCR Result State
   const [result, setResult] = useState({
     status: '',
     text: '',
@@ -33,28 +28,7 @@ function App() {
     error: null
   });
 
-  // Global Error
-  const [errorMsg, setErrorMsg] = useState('');
-
-  // Polling Cancellation
   const pollingActive = useRef(false);
-
-  // Automatically check token
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      setIsLoggedIn(true);
-      setAuthToken(token);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    setAuthToken(null);
-    setIsLoggedIn(false);
-    resetFlow();
-    setCurrentView('auth');
-  };
 
   const handleError = (msg) => {
     setErrorMsg(msg);
@@ -63,32 +37,33 @@ function App() {
 
   // === View Handlers ===
   const handleStart = () => {
-    if (isLoggedIn) {
-      setCurrentView('upload');
-    } else {
-      setCurrentView('auth');
-    }
+    setCurrentView('upload');
   };
 
-  const handleUploadSubmit = async (file, language) => {
+  const handleUploadSubmit = async (file) => {
     try {
       setSelectedFile(file);
-      setSelectedLanguage(language);
+      // Hardcoded Hindi focus
+      setSelectedLanguage('hin');
       setCurrentView('processing');
       pollingActive.current = true;
 
-      // EXECUTING CAPACITOR/REACT NATIVE ONNX ENGINE OFFLINE
+      // EXECUTING CAPACITOR/REACT NATIVE ONNX ENGINE OFFLINE (WebGPU enabled)
       const res = await runLocalInference(file, '/vocab.json', '/model.onnx'); 
       
       if (res.status === 'done') {
           setResult({
             status: res.status,
             text: res.text,
-            confidence: 99.9, // Raw static logic representation for greedy decoding natively
-            wordCount: res.text ? res.text.split(' ').length : 0,
+            confidence: res.confidence,
+            wordCount: res.text ? res.text.trim().split(/\s+/).length : 0,
             processingTimeMs: res.processingTimeMs,
             error: null
           });
+
+          // Save to local history automatically (Hardcoded 'hin')
+          await localHistory.saveResult(res, file, 'hin');
+          
           setCurrentView('result');
       }
     } catch (err) {
@@ -112,30 +87,38 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Top Header / Navigation could go here */}
       <header className="flex justify-between items-center" style={{ padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--color-border)' }}>
-        <h2 style={{ color: 'var(--color-accent)', cursor: 'pointer' }} onClick={() => isLoggedIn ? setCurrentView('landing') : null}>
+        <h2 style={{ color: 'var(--color-accent)', cursor: 'pointer' }} onClick={() => setCurrentView('landing')}>
           Akshara OCR
         </h2>
-        {currentView !== 'auth' && (
-          <div className="flex gap-2">
-            <button className="btn-secondary" onClick={() => setCurrentView('upload')}>New Extract</button>
-            <button className="btn-secondary" onClick={navigateToHistory}>History</button>
-            <button className="btn-secondary" onClick={navigateToSettings} style={{ padding: '8px' }} aria-label="Settings">
-              <Settings size={20} />
-            </button>
-          </div>
-        )}
+        
+        <div className="flex gap-2">
+          <button className="icon-btn" onClick={() => setCurrentView('upload')} title="New Extractions">
+            <PlusSquare size={20} />
+          </button>
+          <button className="icon-btn" onClick={navigateToHistory} title="Local History">
+            <History size={20} />
+          </button>
+          <button className="icon-btn" onClick={navigateToSettings} title="Settings">
+            <Settings size={20} />
+          </button>
+        </div>
       </header>
 
       <main>
         {currentView === 'landing' && <LandingScreen onStart={handleStart} demoCases={demoCases} />}
-        {currentView === 'auth' && <AuthScreen onLoginSuccess={() => { setIsLoggedIn(true); setCurrentView('upload'); }} />}
         {currentView === 'upload' && <UploadScreen onUploadSubmit={handleUploadSubmit} demoCases={demoCases} />}
         {currentView === 'processing' && <ProcessingScreen onCancel={cancelProcessing} />}
-        {currentView === 'result' && <ResultsScreen result={result} selectedLanguage={selectedLanguage} selectedFile={selectedFile} onBack={resetFlow} />}
+        {currentView === 'result' && (
+          <ResultsScreen 
+            result={result} 
+            selectedLanguage={selectedLanguage} 
+            selectedFile={selectedFile} 
+            onBack={resetFlow} 
+          />
+        )}
         {currentView === 'history' && <HistoryScreen />}
-        {currentView === 'settings' && <SettingsScreen onLogout={handleLogout} />}
+        {currentView === 'settings' && <SettingsScreen />}
         {currentView === 'error' && <ErrorScreen message={errorMsg} onRetry={resetFlow} />}
       </main>
     </div>

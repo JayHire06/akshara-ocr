@@ -24,7 +24,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.cuda.amp import GradScaler, autocast
+from torch import amp
 from torch.utils.data import DataLoader
 
 try:
@@ -52,7 +52,7 @@ sys.path.insert(0, str(ROOT_DIR))
 from data.dataset import OCRDatasetV6
 from model.crnn import CRNNv6
 from model.loss import FocalCTCLoss
-from model.ctc_beam_search import ctc_beam_search_decoder, nlp_reranker
+from model.ctc_beam_search import ctc_beam_search_decoder, greedy_decoder, nlp_reranker
 from nlp.spell_checker import SpellChecker
 
 # Hyperparams
@@ -100,7 +100,7 @@ def train():
 
     model = CRNNv6(vocab_size, CFG).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=CFG["max_lr"], weight_decay=CFG["weight_decay"])
-    scaler = GradScaler(enabled=(device.type == "cuda"))
+    scaler = amp.GradScaler('cuda', enabled=(device.type == "cuda"))
     criterion = FocalCTCLoss(blank_id=0, gamma=2.0, alpha=1.0, zero_infinity=True).to(device)
 
     train_ds = OCRDatasetV6(TRAIN_LABELS, vocab, is_training=True)
@@ -138,7 +138,7 @@ def train():
             tgt_lengths = tgt_lengths.to(device, non_blocking=True)
 
             optimizer.zero_grad(set_to_none=True)
-            with autocast(enabled=(device.type == "cuda")):
+            with amp.autocast('cuda', enabled=(device.type == "cuda")):
                 outputs = model(images)
                 inp_lengths = torch.full((images.size(0),), outputs.size(0), dtype=torch.long, device=device)
                 loss = criterion(outputs, targets, inp_lengths, tgt_lengths)
@@ -158,42 +158,54 @@ def train():
 
         # Eval Setup directly applying NLP
         model.eval()
-        all_preds, all_gts = [], []
+        all_greedy_preds, all_nlp_preds, all_gts = [], [], []
         val_loss_sum = 0.0
         
+        # We only do heavy NLP processing on a small subset for representative feedback
+        NLP_SAMPLE_LIMIT = 50 
+        processed_nlp_count = 0
+
         with torch.no_grad():
             for images, targets, tgt_lengths, labels in val_loader:
                 images = images.to(device, non_blocking=True)
                 targets = targets.to(device, non_blocking=True)
                 tgt_lengths = tgt_lengths.to(device, non_blocking=True)
-                with autocast(enabled=(device.type == "cuda")):
+                with amp.autocast('cuda', enabled=(device.type == "cuda")):
                     outputs = model(images)
                     inp_lengths = torch.full((images.size(0),), outputs.size(0), dtype=torch.long, device=device)
                     vloss = criterion(outputs, targets, inp_lengths, tgt_lengths)
                 
                 val_loss_sum += vloss.item()
                 
-                # Beam Search + NLP Linguistic Evaluation Mapping
-                outputs_mapped = outputs.cpu() # (T, B, V)
-                outputs_mapped = outputs_mapped.transpose(0, 1) # (B, T, V)
+                # Processing outputs for metrics
+                outputs_mapped = outputs.cpu().transpose(0, 1) # (B, T, V)
                 
                 for seq_idx in range(outputs_mapped.shape[0]):
                     seq_log_probs = outputs_mapped[seq_idx]
-                    raw_candidates = ctc_beam_search_decoder(seq_log_probs, vocab_inv, beam_width=CFG['beam_width'], blank_id=0)
                     
-                    if spell_checker:
-                       reranked_final = nlp_reranker(raw_candidates, spell_checker, threshold_edit_distance=2)
-                       all_preds.append(reranked_final)
-                    else:
-                       all_preds.append("".join(raw_candidates[0][0]) if raw_candidates else "")
+                    # 1. Fast Greedy Path (for all samples)
+                    g_pred = greedy_decoder(seq_log_probs, vocab_inv, blank_id=0)
+                    all_greedy_preds.append(g_pred)
+                    
+                    # 2. Slow NLP Beam Path (subset only)
+                    if processed_nlp_count < NLP_SAMPLE_LIMIT:
+                        raw_candidates = ctc_beam_search_decoder(seq_log_probs, vocab_inv, beam_width=CFG['beam_width'], blank_id=0)
+                        if spell_checker:
+                            nl_pred = nlp_reranker(raw_candidates, spell_checker, threshold_edit_distance=2)
+                        else:
+                            nl_pred = raw_candidates[0][0] if raw_candidates else ""
+                        all_nlp_preds.append(nl_pred)
+                        processed_nlp_count += 1
                 
                 all_gts.extend(labels)
 
-        val_crr = sum(p == g for p, g in zip(all_preds, all_gts)) / max(len(all_preds), 1) * 100
-        print(f"\nEp {epoch:02d} | Train Loss: {train_loss:.4f} | Reranked CRR: {val_crr:.2f}%")
+        val_crr = sum(p == g for p, g in zip(all_greedy_preds, all_gts)) / max(len(all_greedy_preds), 1) * 100
+        print(f"\nEp {epoch:02d} | Train Loss: {train_loss:.4f} | Greedy CRR: {val_crr:.2f}%")
         
-        for gt, pr in zip(all_gts[:3], all_preds[:3]):
-            print(f"  GT: {gt} -> NLP_PR: {pr}")
+        if all_nlp_preds:
+            print(f"  [NLP Insight on first {len(all_nlp_preds)} samples]")
+            for gt, g_pr, n_pr in zip(all_gts[:3], all_greedy_preds[:3], all_nlp_preds[:3]):
+                print(f"  GT: {gt} -> Greedy: {g_pr} | NLP_Beam: {n_pr}")
             
         if val_crr > best_crr:
             best_crr = val_crr
