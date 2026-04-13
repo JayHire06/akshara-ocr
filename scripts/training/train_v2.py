@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import torch
 import torch.nn as nn
@@ -8,8 +9,11 @@ import numpy as np
 from PIL import Image
 
 # PATHS:
-import os
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+from model.crnn import CRNN  # canonical block+linear architecture
 TRAIN_LABELS = [os.path.join(ROOT_DIR, "data", "combined", "train_labels.txt")]
 VAL_LABELS = os.path.join(ROOT_DIR, "data", "combined", "val_labels.txt")
 CHECKPOINT_DIR = os.path.join(ROOT_DIR, "model", "checkpoints_v2")
@@ -94,35 +98,18 @@ def collate_fn(batch):
 
 
 # STEP 3 — Model
-class CRNN(nn.Module):
-    def __init__(self, vocab_size):
-        super(CRNN, self).__init__()
+# CRNN is imported from model.crnn (canonical block+linear architecture).
+# v2 is defined as "v1 with augmentation tweaks", so architecture is identical
+# and the v1 checkpoint fine-tunes cleanly into it.
 
-        def conv_block(in_c, out_c):
-            return nn.Sequential(
-                nn.Conv2d(in_c, out_c, kernel_size=3, padding=1),
-                nn.BatchNorm2d(out_c),
-                nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1))
-            )
-
-        self.cnn = nn.Sequential(
-            conv_block(1, 64),
-            conv_block(64, 128),
-            conv_block(128, 256),
-            conv_block(256, 512),
-            conv_block(512, 512)
-        )
-        self.rnn = nn.LSTM(512, 256, num_layers=2, bidirectional=True, dropout=0.3, batch_first=False)
-        self.fc = nn.Linear(512, vocab_size)
-
-    def forward(self, x):
-        x = self.cnn(x)
-        x = x.squeeze(2)
-        x = x.permute(2, 0, 1)
-        x, _ = self.rnn(x)
-        x = self.fc(x)
-        return nn.functional.log_softmax(x, dim=2)
+CRNN_CONFIG = {
+    'in_channels': 1,
+    'lstm_input_size': 512,
+    'lstm_hidden_size': 256,
+    'lstm_num_layers': 2,
+    'lstm_dropout': 0.3,
+    'blank_id': 0,
+}
 
 
 # STEP 4 — CTC Decoder
@@ -179,20 +166,22 @@ def train():
     if torch.cuda.is_available():
         print(torch.cuda.get_device_name(0))
 
-    model = CRNN(vocab_size).to(device)
+    model = CRNN(vocab_size=vocab_size, config=CRNN_CONFIG).to(device)
 
-    # Fine-tune from best_model_v4.pth
-    v4_path = os.path.join(CHECKPOINT_DIR, "best_model_v4.pth")
-    if os.path.exists(v4_path):
-        pretrained_dict = torch.load(v4_path, map_location=device, weights_only=True)
+    # Fine-tune from best v1 checkpoint if available
+    v1_path = os.path.join(CHECKPOINT_DIR, "..", "checkpoints_v1", "best_model.pth")
+    if os.path.exists(v1_path):
+        pretrained_dict = torch.load(v1_path, map_location=device, weights_only=True)
+        if 'model_state_dict' in pretrained_dict:
+            pretrained_dict = pretrained_dict['model_state_dict']
         model_dict = model.state_dict()
         # Filter out mismatched layers (e.g. fc.weight when vocab size changes)
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and v.shape == model_dict[k].shape}
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
-        print(f"Loaded compatible weights from best_model_v4.pth (ignored {len(model.state_dict()) - len(pretrained_dict)} mismatched layers) — fine-tuning!")
+        print(f"Loaded compatible weights from v1 (ignored {len(model.state_dict()) - len(pretrained_dict)} mismatched layers) — fine-tuning!")
     else:
-        print("WARNING: best_model_v4.pth not found. Training from scratch.")
+        print("No v1 checkpoint found. Training from scratch.")
 
     optimizer = optim.Adam(model.parameters(), lr=0.00005)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', patience=2, factor=0.5)
@@ -278,9 +267,9 @@ def train():
         # Save best
         if val_crr > best_val_crr:
             best_val_crr = val_crr
-            best_model_path = os.path.join(CHECKPOINT_DIR, "best_model_v5.pth")
+            best_model_path = os.path.join(CHECKPOINT_DIR, "best_model_v2.pth")
             torch.save(model.state_dict(), best_model_path)
-            print(f"NEW BEST (v5): {val_crr:.2f}%")
+            print(f"NEW BEST (v2): {val_crr:.2f}%")
             epochs_no_improve = 0
         else:
             epochs_no_improve += 1

@@ -103,9 +103,14 @@ def train():
     scaler = amp.GradScaler('cuda', enabled=(device.type == "cuda"))
     criterion = FocalCTCLoss(blank_id=0, gamma=2.0, alpha=1.0, zero_infinity=True).to(device)
 
-    train_ds = OCRDatasetV6(TRAIN_LABELS, vocab, is_training=True)
-    val_ds   = OCRDatasetV6(VAL_LABELS, vocab, is_training=False)
-    
+    from torch.utils.data import Subset
+    full_train_ds = OCRDatasetV6(TRAIN_LABELS, vocab, is_training=True)
+    full_val_ds   = OCRDatasetV6(VAL_LABELS, vocab, is_training=False)
+    # V3+ standard: cap to 200K train, 10K val
+    train_ds = Subset(full_train_ds, range(min(200_000, len(full_train_ds))))
+    val_ds   = Subset(full_val_ds, range(min(10_000, len(full_val_ds))))
+    print(f"Train: {len(train_ds)} samples (200K cap)  Val: {len(val_ds)} samples")
+
     loader_kw = dict(
         collate_fn=collate_fn, num_workers=CFG["num_workers"],
         pin_memory=(device.type == "cuda"), persistent_workers=(CFG["num_workers"] > 0)

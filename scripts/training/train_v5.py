@@ -65,12 +65,17 @@ except ImportError:
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
-ROOT_DIR       = Path(__file__).resolve().parent.parent
+ROOT_DIR       = Path(__file__).resolve().parent.parent.parent
 CHECKPOINT_DIR = ROOT_DIR / "model" / "checkpoints"
 DATA_DIR       = ROOT_DIR / "data" / "combined"
 TRAIN_LABELS   = DATA_DIR / "train_labels.txt"
 VAL_LABELS     = DATA_DIR / "val_labels.txt"
 VOCAB_FILE     = DATA_DIR / "vocab.json"
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from model.crnn import CRNN  # canonical block+linear architecture
 
 # ─── Hyperparameters ─────────────────────────────────────────────────────────
 
@@ -137,46 +142,20 @@ def collate_fn(batch):
 
 
 # ─── Model ───────────────────────────────────────────────────────────────────
+# v5 uses the canonical CRNN (block+linear) imported from model.crnn.
+# Config keys below are mapped to the shape CRNN.__init__ expects.
 
-class CRNNv5(nn.Module):
-    """CRNN v5 — identical architecture to v4, compatible weight loading."""
 
-    def __init__(self, vocab_size: int, cfg: dict):
-        super().__init__()
-
-        def _block(in_c, out_c, pool):
-            return nn.Sequential(
-                nn.Conv2d(in_c, out_c, 3, padding=1),
-                nn.BatchNorm2d(out_c),
-                nn.ReLU(inplace=True),
-                nn.MaxPool2d(kernel_size=pool, stride=pool),
-            )
-
-        self.cnn = nn.Sequential(
-            _block(cfg["in_channels"], 64,  (2, 2)),
-            _block(64,  128, (2, 2)),
-            _block(128, 256, (2, 1)),
-            _block(256, 256, (2, 1)),
-            _block(256, 512, (2, 1)),
-        )
-
-        h = cfg["lstm_hidden"]
-        self.rnn = nn.LSTM(
-            512, h,
-            num_layers=cfg["lstm_layers"],
-            bidirectional=True,
-            dropout=cfg["lstm_dropout"],
-            batch_first=False,
-        )
-        self.fc  = nn.Linear(h * 2, vocab_size)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.cnn(x)          # (B, 512, 1, W')
-        x = x.squeeze(2)         # (B, 512, W')
-        x = x.permute(2, 0, 1)   # (W', B, 512)
-        x, _ = self.rnn(x)       # (W', B, H*2)
-        x = self.fc(x)            # (W', B, vocab)
-        return nn.functional.log_softmax(x, dim=2)
+def build_crnn(vocab_size: int, cfg: dict) -> nn.Module:
+    model_cfg = {
+        "in_channels":      cfg["in_channels"],
+        "lstm_input_size":  512,
+        "lstm_hidden_size": cfg["lstm_hidden"],
+        "lstm_num_layers":  cfg["lstm_layers"],
+        "lstm_dropout":     cfg["lstm_dropout"],
+        "blank_id":         0,
+    }
+    return CRNN(vocab_size=vocab_size, config=model_cfg)
 
 
 # ─── Decoding / metrics ───────────────────────────────────────────────────────
@@ -293,7 +272,7 @@ def train(resume_path: str | None = None):
     best_crr = 0.0
 
     # ── Model ──
-    model = CRNNv5(vocab_size, CFG).to(device)
+    model = build_crnn(vocab_size, CFG).to(device)
 
     # ── Optimizer + AMP ──
     optimizer = optim.AdamW(
@@ -349,11 +328,15 @@ def train(resume_path: str | None = None):
 
     print(f"\nRun directory: {run_dir}\n")
 
-    # ── Datasets ──
-    train_ds = OCRDataset(TRAIN_LABELS, vocab)
-    val_ds   = OCRDataset(VAL_LABELS, vocab)
-    n_train, n_val = len(train_ds), len(val_ds)
-    print(f"Train samples: {n_train}  Val samples: {n_val}")
+    # ── Datasets (V3+ standard: cap to 200K train, 10K val) ──
+    from torch.utils.data import Subset
+    full_train_ds = OCRDataset(TRAIN_LABELS, vocab)
+    full_val_ds   = OCRDataset(VAL_LABELS, vocab)
+    n_train = min(200_000, len(full_train_ds))
+    n_val   = min(10_000, len(full_val_ds))
+    train_ds = Subset(full_train_ds, range(n_train))
+    val_ds   = Subset(full_val_ds, range(n_val))
+    print(f"Train samples: {n_train} (capped)  Val samples: {n_val} (capped)")
 
     loader_kw = dict(
         collate_fn=collate_fn,

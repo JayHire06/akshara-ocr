@@ -12,7 +12,9 @@ root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 sys.path.insert(0, root_dir)
 
 from model.crnn import CRNN, CRNNv6
+from model.crnn_v9 import CRNNv9
 from model.ctc_decoder import CTCDecoder
+from model.benchmark_eval import CheckpointLoadError
 from preprocess.pipeline import preprocess
 
 import unicodedata
@@ -58,36 +60,66 @@ def evaluate_model_on_directory(model_identifier, checkpoint_path, test_dir, gt_
     # 1. Load checkpoint
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
     state_dict = ckpt['model_state_dict'] if 'model_state_dict' in ckpt else ckpt
-    if 'model' in ckpt: 
+    if 'model' in ckpt:
         state_dict = ckpt['model']
-        
+
     # Infer Vocab Size Dynamically
-    # Try multiple linear/fc keys for different versions
-    fc_bias_key = [k for k in state_dict.keys() if '.fc.bias' in k or '.fc.2.bias' in k or 'linear.bias' in k or 'fc.bias' in k]
+    fc_bias_key = [k for k in state_dict.keys() if '.fc.bias' in k or '.fc.2.bias' in k or 'linear.bias' in k or k == 'fc.bias']
     if not fc_bias_key:
-        raise ValueError(f"Could not find output layer in state_dict: {state_dict.keys()}")
+        raise CheckpointLoadError(f"{checkpoint_path}: no fc/linear output bias key found.")
     fc_bias_key = fc_bias_key[-1]
     vocab_size = state_dict[fc_bias_key].shape[0]
     print(f"[{model_identifier}] Detected Vocab Size: {vocab_size}")
-    
+
     # 2. Build Model structure based on dynamic key detection
     has_stn = any('stn.' in k for k in state_dict.keys())
-    has_mobilenet = any('depthwise' in k for k in state_dict.keys()) or any('pointwise' in k for k in state_dict.keys())
-    
+    has_depthwise = any('depthwise' in k for k in state_dict.keys())
+    has_block_cnn = any(k.startswith('cnn.block') for k in state_dict.keys())
+    has_transformer = any('transformer.layers' in k for k in state_dict.keys())
+    has_sequential_cnn = (
+        any(k.startswith('cnn.0.0') for k in state_dict.keys()) and not has_depthwise
+    )
+
+    if has_sequential_cnn:
+        raise CheckpointLoadError(
+            f"{checkpoint_path}: legacy Sequential CRNN layout detected "
+            f"(cnn.0.0.*/fc.*). Current CRNN uses cnn.block*/linear.*. "
+            f"Retrain required."
+        )
+
     config = {
         'in_channels': 1, 'lstm_input_size': 512, 'lstm_hidden_size': 256,
         'lstm_num_layers': 2, 'lstm_dropout': 0.0, 'blank_id': 0,
-        'use_stn': has_stn
+        'use_stn': has_stn,
+        'lstm_hidden': 256, 'lstm_layers': 2,
     }
-    
-    if has_mobilenet or has_stn:
+
+    if has_transformer:
+        print(f"  [ARCH] Detected CRNNv9 (Transformer encoder)")
+        model = CRNNv9(vocab_size=vocab_size, config=config).to(device)
+        arch_name = "CRNNv9"
+    elif has_depthwise or has_stn:
         print(f"  [ARCH] Detected CRNNv6 (MobileNet) | STN: {has_stn}")
         model = CRNNv6(vocab_size=vocab_size, config=config).to(device)
+        arch_name = "CRNNv6"
     else:
-        print(f"  [ARCH] Detected Standard CRNN")
+        if not has_block_cnn:
+            raise CheckpointLoadError(
+                f"{checkpoint_path}: unrecognised CRNN variant."
+            )
+        print(f"  [ARCH] Detected Standard CRNN (blocks)")
         model = CRNN(vocab_size=vocab_size, config=config).to(device)
-        
-    model.load_state_dict(state_dict, strict=False)
+        arch_name = "CRNN"
+
+    missing, unexpected = model.load_state_dict(state_dict, strict=False)
+    expected = len(model.state_dict())
+    loaded_ratio = (expected - len(missing)) / expected
+    if loaded_ratio < 0.90:
+        raise CheckpointLoadError(
+            f"{checkpoint_path}: only {loaded_ratio*100:.0f}% of {arch_name} "
+            f"params loaded (missing={len(missing)} unexpected={len(unexpected)}). "
+            f"Refusing to report metrics on a random-init model."
+        )
     model.eval()
 
     # 3. Handle Vocab
@@ -192,7 +224,9 @@ def main():
         "v4 (Realistic)": os.path.join(root_dir, 'model', 'checkpoints_realistic_v2'),
         "v5 (Current Prod)": os.path.join(root_dir, 'model', 'checkpoints'),
         "v6 (Edge STN)": os.path.join(root_dir, 'model', 'checkpoints_v6_edge'),
-        "v7 (NLP-Guided)": os.path.join(root_dir, 'model', 'checkpoints_v7_nlp')
+        "v7 (NLP-Guided)": os.path.join(root_dir, 'model', 'checkpoints_v7_nlp'),
+        "v8 (Staged Curric.)": os.path.join(root_dir, 'model', 'checkpoints_v8'),
+        "v9 (Transformer)":    os.path.join(root_dir, 'model', 'checkpoints_v9')
     }
     
     results = []
@@ -209,7 +243,11 @@ def main():
              ckpts = glob.glob(os.path.join(directory, "run_v6_*", "best_v6.pth"))
         elif name == "v7 (NLP-Guided)":
              ckpts = glob.glob(os.path.join(directory, "run_v7_*", "best_v7.pth"))
-             
+        elif name == "v8 (Staged Curric.)":
+             ckpts = glob.glob(os.path.join(directory, "run_v8_*", "best_v8.pth"))
+        elif name == "v9 (Transformer)":
+             ckpts = glob.glob(os.path.join(directory, "run_v9_*", "best_v9.pth"))
+
         if not ckpts:
             results.append((name, "N/A", "N/A"))
             continue
@@ -218,8 +256,11 @@ def main():
         try:
             cer, wer, empty = evaluate_model_on_directory(name, best_ckpt, test_dir, gt_file, device)
             results.append((name, f"{cer:.2f}%", f"{wer:.2f}%", f"{empty:.2f}%"))
-        except Exception as e:
-            print(f"Failed to infer {name}: {e}")
+        except CheckpointLoadError as err:
+            print(f"[{name}] INCOMPATIBLE: {err}")
+            results.append((name, "INCOMPAT", "INCOMPAT", "INCOMPAT"))
+        except Exception as err:
+            print(f"Failed to infer {name}: {err}")
             import traceback
             traceback.print_exc()
             results.append((name, "Error", "Error", "Error"))

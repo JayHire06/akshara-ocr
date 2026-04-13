@@ -63,9 +63,14 @@ def start_training():
     
     print("Loading Realistic Datasets...")
     # Passing the full vocab path, it builds it if absent
-    train_dataset = OCRDataset(train_dir, train_csv, vocab_path=os.path.join(root_dir, 'vocab.json'), is_v5_format=True)
-    
-    vocab_dict = train_dataset.vocab
+    full_train_dataset = OCRDataset(train_dir, train_csv, vocab_path=os.path.join(root_dir, 'vocab.json'), is_v5_format=True)
+
+    # V3+ standard: cap to 200K training samples
+    train_subset_size = min(200_000, len(full_train_dataset))
+    print(f"Capping training to {train_subset_size} samples (200K standard)...")
+    train_dataset = Subset(full_train_dataset, range(train_subset_size))
+
+    vocab_dict = full_train_dataset.vocab
     vocab_size = len(vocab_dict)
     
     vocab_list = [""] * vocab_size
