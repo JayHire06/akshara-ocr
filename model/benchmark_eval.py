@@ -128,8 +128,21 @@ def _load_model(checkpoint_path: str | Path, device: torch.device):
     }
 
     if has_transformer:
-        model = CRNNv9(vocab_size=vocab_size, config=config).to(device)
-        arch = "CRNNv9"
+        # Count transformer encoder layers from the state-dict so we match the
+        # checkpoint regardless of CRNNv9's current default (some v9 runs are
+        # 3-layer, others 6-layer).
+        layer_indices = set()
+        for key in state_dict.keys():
+            if key.startswith("transformer.layers."):
+                try:
+                    layer_indices.add(int(key.split(".")[2]))
+                except (IndexError, ValueError):
+                    continue
+        n_layers = max(layer_indices) + 1 if layer_indices else 6
+        v9_config = dict(config)
+        v9_config["transformer_layers"] = n_layers
+        model = CRNNv9(vocab_size=vocab_size, config=v9_config).to(device)
+        arch = f"CRNNv9(L={n_layers})"
     elif has_stn or has_depthwise:
         model = CRNNv6(vocab_size=vocab_size, config=config).to(device)
         arch = "CRNNv6"

@@ -1,20 +1,30 @@
 """
 Akshara-OCR  -  train_v9.py
 ============================
-"The Honest Leap" — v9 Fast-Track training.
+"The Honest Leap" — v9 training (post-mortem revision).
 
-v9.0 stack  (see docs/v9-design.md):
-  A1  Transformer encoder replaces BiLSTM           → model/crnn_v9.CRNNv9
-  D4  Character-frequency weighted sampler          → CharWeightedSampler
-  L1  Focal CTC + label smoothing (ε=0.1)           → FocalCTCLossLS
-  L3  Exponential moving average of weights         → ExponentialMovingAverage
-  DC2 (decoding-only, not used during training)
+The initial run produced 68.48% exact-match val accuracy but 8.79% CER on
+the text-disjoint val — worse than the plain-CRNN v2 retrain baseline
+(3.04% CER). Training loss kept dropping while val plateaued from epoch 8
+onwards — textbook overfitting on short sequences. See the Week-7 entry in
+PROGRESS.md for the full post-mortem. This revision addresses it:
+
+  A1  Transformer encoder replaces BiLSTM           → CRNNv9 (depth 6 → 3)
+  L1  Focal CTC (γ=2, α=1), label smoothing OFF      → FocalCTCLossLS(ε=0)
+  L3  Exponential moving average of weights          → EMA(decay=0.999)
+  D4  Char-frequency weighted sampling — REMOVED.   It was biasing toward
+      short single-word samples (which concentrate rare glyphs) and
+      starving long-sentence learning. Uniform shuffle from here on.
+  Early stopping on val CER with patience=3 — the first run wasted 32
+      epochs past the plateau.
+  Real CER + length-bucketed metrics logged alongside exact-match so a
+      flat exact-match score can't hide character-level progress again.
 
 Dataset:       data/combined/{train,val}_labels.txt  (text-disjoint split)
-Architecture:  STN + MobileNet CNN + 6-layer Transformer encoder
-Loss:          FocalCTCLossLS(γ=2.0, α=1.0, ε=0.1)
+Architecture:  STN + MobileNet CNN + 3-layer Transformer encoder
+Loss:          FocalCTCLossLS(γ=2.0, α=1.0, ε=0.0)
 Optimizer:     AdamW, weight_decay=0.05
-Scheduler:     OneCycleLR(max_lr=3e-4, pct_start=0.10)
+Scheduler:     OneCycleLR(max_lr=1e-4, pct_start=0.20)
 Checkpoints:   model/checkpoints_v9/run_v9_<timestamp>/best_v9.pth
 """
 from __future__ import annotations
@@ -23,7 +33,6 @@ import json
 import os
 import sys
 import time
-from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -31,7 +40,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch import amp
-from torch.utils.data import DataLoader, Subset, WeightedRandomSampler
+from torch.utils.data import DataLoader, Subset
 
 try:
     from tqdm import tqdm
@@ -57,35 +66,39 @@ VOCAB_FILE     = DATA_DIR / "vocab.json"
 
 sys.path.insert(0, str(ROOT_DIR))
 
-from data.dataset import OCRDatasetV6                        # noqa: E402
-from model.crnn_v9 import CRNNv9, ExponentialMovingAverage   # noqa: E402
-from model.ctc_decoder import CTCDecoder                     # noqa: E402
+from data.dataset import OCRDatasetV6                           # noqa: E402
+from model.benchmark_eval import levenshtein_distance, normalize_text  # noqa: E402
+from model.crnn_v9 import CRNNv9, ExponentialMovingAverage      # noqa: E402
+from model.ctc_decoder import CTCDecoder                        # noqa: E402
 
 
 # ── Hyperparameters ─────────────────────────────────────────────────────────
+# Post-mortem revision: depth 6 → 3, LR 3e-4 → 1e-4, pct_start 0.10 → 0.20,
+# label smoothing 0.1 → 0.0, early stopping added. See module docstring.
 CFG = {
     "batch_size":        96,
     "max_epochs":        40,
-    "max_lr":            3e-4,
+    "max_lr":            1e-4,
     "weight_decay":      0.05,
-    "pct_start":         0.10,
+    "pct_start":         0.20,
     "grad_clip":         1.0,
     "num_workers":       min(8, max(1, (os.cpu_count() or 4) - 2)),
     "train_subset":      200_000,
     "val_subset":        10_000,
     "ema_decay":         0.999,
+    "early_stop_patience": 3,
     # Model
     "in_channels":        1,
     "use_stn":            True,
     "transformer_dim":    256,
     "transformer_heads":  8,
-    "transformer_layers": 6,
+    "transformer_layers": 3,
     "transformer_ff":     1024,
     "transformer_dropout":0.1,
     # Loss
     "focal_gamma":        2.0,
     "focal_alpha":        1.0,
-    "label_smoothing":    0.1,
+    "label_smoothing":    0.0,
 }
 
 
@@ -121,27 +134,6 @@ class FocalCTCLossLS(nn.Module):
         return focal_mean
 
 
-# ── D4: Character-frequency weighted sampler ────────────────────────────────
-def char_frequency_weights(samples: list[tuple[str, str]]) -> list[float]:
-    """One weight per sample, inversely proportional to the average character
-    frequency in its target. Samples containing rare glyphs get larger weights.
-    """
-    char_counts: Counter[str] = Counter()
-    for _, label in samples:
-        char_counts.update(label)
-    total = sum(char_counts.values()) or 1
-    inverse: dict[str, float] = {
-        ch: total / (cnt * len(char_counts)) for ch, cnt in char_counts.items()
-    }
-    weights: list[float] = []
-    for _, label in samples:
-        if not label:
-            weights.append(1.0)
-            continue
-        weights.append(sum(inverse.get(ch, 1.0) for ch in label) / len(label))
-    return weights
-
-
 # ── Dataset helpers ─────────────────────────────────────────────────────────
 def collate_fn(batch):
     images, targets, labels = zip(*batch)
@@ -168,14 +160,23 @@ def decode_for_metrics(log_probs: torch.Tensor, decoder: CTCDecoder) -> list[str
     return [d.replace("<UNK>", "").strip() for d in decoded]
 
 
-def char_rate(preds: list[str], targets: list[str]) -> float:
-    if not preds:
-        return 0.0
-    return sum(p == t for p, t in zip(preds, targets)) / len(preds)
+def _length_bucket(text: str) -> str:
+    n = len(text.split())
+    if n <= 1:
+        return "1w"
+    if n <= 4:
+        return "2-4w"
+    return "5+w"
 
 
 def evaluate(model: nn.Module, loader: DataLoader, decoder: CTCDecoder,
-             device: torch.device) -> float:
+             device: torch.device) -> dict:
+    """Return {exact_match, cer, wer, by_length: {bucket: {n, cer, exact_match}}}.
+
+    Exact-match is the original char_rate — full-string equality. CER is the
+    character-level edit-distance rate. Length buckets let us see if the model
+    is trading long-sequence accuracy for short-word memorization (the failure
+    mode of the first v9 run)."""
     model.eval()
     preds: list[str] = []
     gts: list[str] = []
@@ -186,12 +187,58 @@ def evaluate(model: nn.Module, loader: DataLoader, decoder: CTCDecoder,
                 out = model(images)
             preds.extend(decode_for_metrics(out, decoder))
             gts.extend(labels)
-    return char_rate(preds, gts)
+
+    if not preds:
+        return {"exact_match": 0.0, "cer": 1.0, "wer": 1.0, "by_length": {}}
+
+    total_cer = 0.0
+    total_wer = 0.0
+    exact = 0
+    buckets: dict[str, dict] = {"1w": {"n": 0, "cer_sum": 0.0, "exact": 0},
+                                 "2-4w": {"n": 0, "cer_sum": 0.0, "exact": 0},
+                                 "5+w": {"n": 0, "cer_sum": 0.0, "exact": 0}}
+    for p, t in zip(preds, gts):
+        p_n = normalize_text(p)
+        t_n = normalize_text(t)
+        if not t_n:
+            cer = 1.0 if p_n else 0.0
+        else:
+            cer = min(1.0, levenshtein_distance(p_n, t_n) / len(t_n))
+        p_words = p_n.split()
+        t_words = t_n.split()
+        if not t_words:
+            wer = 1.0 if p_words else 0.0
+        else:
+            wer = min(1.0, levenshtein_distance(p_words, t_words) / len(t_words))
+        is_exact = int(p_n == t_n)
+        total_cer += cer
+        total_wer += wer
+        exact += is_exact
+        b = buckets[_length_bucket(t_n)]
+        b["n"] += 1
+        b["cer_sum"] += cer
+        b["exact"] += is_exact
+
+    n = len(preds)
+    by_length = {
+        k: {
+            "n": v["n"],
+            "cer": (v["cer_sum"] / v["n"]) if v["n"] else None,
+            "exact_match": (v["exact"] / v["n"]) if v["n"] else None,
+        }
+        for k, v in buckets.items()
+    }
+    return {
+        "exact_match": exact / n,
+        "cer":         total_cer / n,
+        "wer":         total_wer / n,
+        "by_length":   by_length,
+    }
 
 
 def save_checkpoint(run_dir: Path, tag: str, model: nn.Module,
                     ema: ExponentialMovingAverage, optimizer, scaler,
-                    epoch: int, crr: float) -> Path:
+                    epoch: int, metrics: dict) -> Path:
     path = run_dir / f"{tag}.pth"
     torch.save({
         "epoch":       epoch,
@@ -199,7 +246,7 @@ def save_checkpoint(run_dir: Path, tag: str, model: nn.Module,
         "ema_shadow":  ema.shadow,
         "optimizer":   optimizer.state_dict(),
         "scaler":      scaler.state_dict() if scaler is not None else None,
-        "val_crr":     crr,
+        "val_metrics": metrics,
         "config":      CFG,
     }, path)
     return path
@@ -228,18 +275,11 @@ def main() -> None:
     train_ds   = Subset(full_train, range(train_len))
     val_ds     = Subset(full_val,   range(val_len))
 
-    # D4 — character-frequency weighted sampling
-    sample_weights = char_frequency_weights(
-        [full_train.samples[i] for i in range(train_len)]
-    )
-    sampler = WeightedRandomSampler(
-        weights=sample_weights,
-        num_samples=train_len,
-        replacement=True,
-    )
-
+    # Uniform shuffle. The original D4 char-frequency weighted sampler was
+    # biasing toward short single-word samples (which concentrate rare
+    # glyphs) and starving long-sentence learning — see post-mortem.
     train_loader = DataLoader(
-        train_ds, batch_size=CFG["batch_size"], sampler=sampler,
+        train_ds, batch_size=CFG["batch_size"], shuffle=True,
         num_workers=CFG["num_workers"], pin_memory=True,
         collate_fn=collate_fn, persistent_workers=CFG["num_workers"] > 0,
     )
@@ -283,7 +323,8 @@ def main() -> None:
           f"vocab={vocab_size}  params={sum(p.numel() for p in model.parameters())/1e6:.2f}M")
     print("=" * 60)
 
-    best_crr = -1.0
+    best_cer = float("inf")
+    epochs_without_improvement = 0
     metrics_path = run_dir / "metrics.jsonl"
     for epoch in range(1, CFG["max_epochs"] + 1):
         model.train()
@@ -329,29 +370,51 @@ def main() -> None:
 
         # Evaluate using EMA weights
         backup = ema.copy_to(model)
-        crr = evaluate(model, val_loader, decoder, device)
+        m = evaluate(model, val_loader, decoder, device)
         ema.restore(model, backup)
 
         dt = time.time() - t0
-        print(f"[epoch {epoch:02d}] loss={avg_loss:.4f}  val_crr={crr*100:.2f}%  ({dt:.1f}s)")
+        bl = m["by_length"]
+        def _fmt(b: dict) -> str:
+            return f"{b['cer']*100:.2f}%" if b.get("cer") is not None else "  —  "
+        print(
+            f"[epoch {epoch:02d}] loss={avg_loss:.4f}  "
+            f"cer={m['cer']*100:.2f}%  wer={m['wer']*100:.2f}%  "
+            f"exact={m['exact_match']*100:.2f}%  "
+            f"|  1w={_fmt(bl['1w'])} "
+            f"2-4w={_fmt(bl['2-4w'])} "
+            f"5+w={_fmt(bl['5+w'])}  ({dt:.1f}s)"
+        )
 
         with open(metrics_path, "a", encoding="utf-8") as f:
             f.write(json.dumps({
-                "epoch": epoch, "loss": avg_loss, "val_crr": crr,
+                "epoch": epoch, "loss": avg_loss,
+                "cer": m["cer"], "wer": m["wer"],
+                "exact_match": m["exact_match"],
+                "by_length": m["by_length"],
                 "elapsed": dt,
             }) + "\n")
 
-        if crr > best_crr:
-            best_crr = crr
+        if m["cer"] < best_cer:
+            best_cer = m["cer"]
+            epochs_without_improvement = 0
             # swap EMA weights into the model for the saved best checkpoint
             backup = ema.copy_to(model)
             save_checkpoint(run_dir, "best_v9", model, ema, optimizer, scaler,
-                            epoch, crr)
+                            epoch, m)
             ema.restore(model, backup)
-            print(f"  ↳ new best saved: {best_crr*100:.2f}%")
+            print(f"  ↳ new best saved: CER {best_cer*100:.2f}%")
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= CFG["early_stop_patience"]:
+                print(
+                    f"  ↳ early stop: {epochs_without_improvement} epochs "
+                    f"without CER improvement (best={best_cer*100:.2f}%)"
+                )
+                break
 
     print("=" * 60)
-    print(f"Training complete. Best EMA val CRR: {best_crr*100:.2f}%")
+    print(f"Training complete. Best EMA val CER: {best_cer*100:.2f}%")
     print(f"Checkpoints: {run_dir}")
     print("=" * 60)
 

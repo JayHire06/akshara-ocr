@@ -1,0 +1,79 @@
+{
+  "device": "cuda",
+  "val_labels": "data/combined/val_labels.txt",
+  "n_samples": 16680,
+  "results": [
+    {
+      "model": "v1 (Base Gen.)",
+      "path": "model/checkpoints_v1/checkpoint_epoch_5.pth",
+      "cer_pct": 7.547034345962449,
+      "wer_pct": 16.98141486810565,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v2 (Early Aug.)",
+      "path": "model/checkpoints_v2/best_model_v2.pth",
+      "cer_pct": 3.0374121692321867,
+      "wer_pct": 12.982613908872764,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v3 (200K Extended)",
+      "path": "model/checkpoints_200k/checkpoint_epoch_10.pth",
+      "cer_pct": 8.191298386659358,
+      "wer_pct": 17.571942446043323,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v4 (Realistic)",
+      "path": "model/checkpoints_realistic_v2/checkpoint_epoch_10.pth",
+      "cer_pct": 8.366974519227135,
+      "wer_pct": 16.689648281374993,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v5 (Current Prod)",
+      "path": "model/checkpoints/run_v5_20260413_210231/best.pth",
+      "cer_pct": 4.8481019222398025,
+      "wer_pct": 16.735611510791394,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v6 (Edge STN)",
+      "path": "model/checkpoints_v6_edge/run_v6_20260414_015709/best_v6.pth",
+      "cer_pct": 10.915555743387307,
+      "wer_pct": 22.644884092726443,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v7 (NLP-Guided)",
+      "path": "model/checkpoints_v7_nlp/run_v7_20260414_021915/best_v7.pth",
+      "cer_pct": 10.197141160624977,
+      "wer_pct": 22.48201438848964,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    },
+    {
+      "model": "v8 (Staged Curriculum)",
+      "path": "model/checkpoints_v8/run_v8_20260413_154830/best_v8.pth",
+      "cer_pct": 47.220574774935294,
+      "wer_pct": 92.61390887290167,
+      "empty_rate_pct": 0.18585131894484413,
+      "n_samples": 16680
+    },
+    {
+      "model": "v9 (Transformer)",
+      "path": "model/checkpoints_v9/run_v9_20260414_024230/best_v9.pth",
+      "cer_pct": 9.955304807793768,
+      "wer_pct": 29.304556354916077,
+      "empty_rate_pct": 0.0,
+      "n_samples": 16680
+    }
+  ]
+}
