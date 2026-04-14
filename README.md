@@ -123,6 +123,3 @@ Fully-offline extraction via Capacitor.
 cd frontend
 npx cap open android
 ```
-
----
-*Built with ❤️ for the Indian Typography community.*
