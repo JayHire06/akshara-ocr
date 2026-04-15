@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from scripts.data.auto_labeled_common import open_work_db
 from scripts.data.scrape_external_pages import scrape_wikisource
 
