@@ -43,7 +43,7 @@ def test_fake_provider_nfc_normalizes_text(tmp_path):
     assert boxes[0].text == "क्ष"  # NFC form
 
 
-def test_get_provider_returns_fake_by_name(tmp_path):
+def test_get_provider_returns_fake_by_name():
     provider = get_provider("fake", fake_responses_path=FAKE_JSON)
     assert isinstance(provider, FakeProvider)
 

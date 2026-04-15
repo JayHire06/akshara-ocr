@@ -65,7 +65,7 @@ class AzureReadProvider(Provider):
     name = "azure"
 
     def __init__(self, endpoint: str, key: str):
-        # Deferred import so tests run without the SDK installed.
+        # Deferred import so this module stays importable without the Azure SDK.
         from azure.ai.documentintelligence import DocumentIntelligenceClient
         from azure.core.credentials import AzureKeyCredential
 
@@ -86,6 +86,8 @@ class AzureReadProvider(Provider):
                 if not text:
                     continue
                 poly = word.polygon  # flat list [x1,y1,x2,y2,x3,y3,x4,y4]
+                if not poly:
+                    continue
                 xs = poly[0::2]
                 ys = poly[1::2]
                 x, y = int(min(xs)), int(min(ys))
