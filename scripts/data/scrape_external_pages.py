@@ -185,7 +185,7 @@ def _download_pdf(url: str, dest: Path) -> None:
     with httpx.Client(timeout=120.0, follow_redirects=True) as client:
         resp = client.get(url)
         resp.raise_for_status()
-    Path(dest).write_bytes(resp.content)
+        Path(dest).write_bytes(resp.content)
 
 
 def _rasterize_pdf(pdf_path: Path) -> list:
@@ -209,21 +209,28 @@ def scrape_gov_pdf(
             break
         pdf_local = raw_dir / f"{uuid.uuid4().hex}.pdf"
         try:
-            _download_pdf(url, pdf_local)
-            images = _rasterize_pdf(pdf_local)
-        except Exception as exc:
-            _insert_page(conn, "gov_pdf", url, pdf_local, "fetch_failed", error=str(exc)[:500])
-            continue
-        for img in images:
-            if pages_written >= limit:
-                break
-            out = raw_dir / f"{uuid.uuid4().hex}.png"
-            img.save(out, format="PNG")
-            if not _is_non_blank_png(out):
-                _insert_page(conn, "gov_pdf", url, out, "fetch_failed", error="blank_render")
+            try:
+                _download_pdf(url, pdf_local)
+                images = _rasterize_pdf(pdf_local)
+            except Exception as exc:
+                _insert_page(conn, "gov_pdf", url, pdf_local, "fetch_failed", error=str(exc)[:500])
                 continue
-            _insert_page(conn, "gov_pdf", url, out, "pending")
-            pages_written += 1
+            if not images:
+                _insert_page(conn, "gov_pdf", url, pdf_local, "fetch_failed", error="zero_pages")
+                continue
+            for img in images:
+                if pages_written >= limit:
+                    break
+                out = raw_dir / f"{uuid.uuid4().hex}.png"
+                img.save(out, format="PNG")
+                if not _is_non_blank_png(out):
+                    out.unlink(missing_ok=True)
+                    _insert_page(conn, "gov_pdf", url, out, "fetch_failed", error="blank_render")
+                    continue
+                _insert_page(conn, "gov_pdf", url, out, "pending")
+                pages_written += 1
+        finally:
+            pdf_local.unlink(missing_ok=True)
 
 
 # --- CLI entry point -------------------------------------------------------------
