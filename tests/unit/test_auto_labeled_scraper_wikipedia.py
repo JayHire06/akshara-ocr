@@ -16,7 +16,7 @@ def test_scrape_wikipedia_inserts_pending_rows(tmp_path, monkeypatch):
     def fake_random_article_urls(limit):
         return fake_urls[:limit]
 
-    def fake_screenshot(url, out_path):
+    def fake_screenshot(_url, out_path):
         out_path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
 
     monkeypatch.setattr(
@@ -29,7 +29,7 @@ def test_scrape_wikipedia_inserts_pending_rows(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(
         "scripts.data.scrape_external_pages._is_non_blank_png",
-        lambda path: True,
+        lambda _path: True,
     )
 
     conn = open_work_db(db_path)

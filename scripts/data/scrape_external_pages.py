@@ -65,11 +65,19 @@ def _random_wikipedia_article_urls(limit: int) -> list[str]:
             "rnlimit": min(limit, 10),
         }
         urls: list[str] = []
+        empty_batches = 0
         while len(urls) < limit:
             resp = client.get(WIKIPEDIA_API, params=params)
             resp.raise_for_status()
             data = resp.json()
-            for item in data["query"]["random"]:
+            batch = data.get("query", {}).get("random", [])
+            if not batch:
+                empty_batches += 1
+                if empty_batches >= 3:
+                    break
+                continue
+            empty_batches = 0
+            for item in batch:
                 title = item["title"].replace(" ", "_")
                 urls.append(WIKIPEDIA_BASE + title)
                 if len(urls) >= limit:
@@ -99,6 +107,7 @@ def scrape_wikipedia(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> Non
         try:
             _screenshot_url(url, out)
             if not _is_non_blank_png(out):
+                out.unlink(missing_ok=True)
                 _insert_page(conn, "wikipedia", url, out, "fetch_failed", error="blank_render")
                 continue
             _insert_page(conn, "wikipedia", url, out, "pending")
