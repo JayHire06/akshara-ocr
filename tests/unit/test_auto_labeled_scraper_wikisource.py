@@ -26,5 +26,7 @@ def test_scrape_wikisource_inserts_pending_rows(tmp_path, monkeypatch):
     scrape_wikisource(conn=conn, limit=1, raw_dir=raw_dir)
     conn.commit()
 
-    row = conn.execute("SELECT source, status FROM pages").fetchone()
-    assert row == ("wikisource", "pending")
+    row = conn.execute("SELECT source, status, local_path FROM pages").fetchone()
+    assert row[0] == "wikisource"
+    assert row[1] == "pending"
+    assert row[2] and str(raw_dir) in row[2]
