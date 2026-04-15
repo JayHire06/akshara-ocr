@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from scripts.data.auto_labeled_common import open_work_db
 from scripts.data.auto_labeled_provider import FakeProvider
 from scripts.data.label_with_cloud_ocr import run_labeler
 
+# Shared fixture retained only for the empty-response test, which asserts
+# a structural contract (zero boxes -> zero word rows) rather than any
+# specific fixture content.
 FAKE_JSON = Path(__file__).parent.parent / "fixtures" / "auto_labeled" / "fake_responses.json"
 
 
@@ -20,21 +24,37 @@ def _seed_pending_page(conn, local_path: Path, source="wikipedia"):
 def test_labeler_drains_pending_and_writes_words(tmp_path):
     db_path = tmp_path / "work.db"
     conn = open_work_db(db_path)
-    img_path = tmp_path / "page_wiki_001.png"
+    img_path = tmp_path / "page.png"
     img_path.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
     _seed_pending_page(conn, img_path)
     conn.close()
 
-    provider = FakeProvider(responses_path=FAKE_JSON)
+    # Inline fixture so this test owns its expected box data and is not
+    # coupled to the shared fake_responses.json.
+    local_fake = tmp_path / "fake.json"
+    local_fake.write_text(
+        json.dumps(
+            {
+                "page.png": [
+                    {"x": 10, "y": 10, "w": 80, "h": 24, "text": "भारत", "conf": 0.95},
+                    {"x": 10, "y": 40, "w": 90, "h": 24, "text": "हिंदी", "conf": 0.93},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    provider = FakeProvider(responses_path=local_fake)
     run_labeler(db_path=db_path, provider=provider, concurrency=2)
 
     conn = open_work_db(db_path)
     page_status = conn.execute("SELECT status FROM pages").fetchone()[0]
     assert page_status == "labeled"
-    word_rows = list(conn.execute("SELECT text_nfc, conf, status FROM words"))
-    assert len(word_rows) == 3
-    assert word_rows[0][0] == "भारत"
-    assert word_rows[0][2] == "labeled"
+    word_rows = list(
+        conn.execute("SELECT text_nfc, conf, status FROM words ORDER BY id")
+    )
+    assert [r[0] for r in word_rows] == ["भारत", "हिंदी"]
+    assert all(r[2] == "labeled" for r in word_rows)
+    assert word_rows[0][1] == 0.95
 
 
 def test_labeler_handles_empty_response(tmp_path):

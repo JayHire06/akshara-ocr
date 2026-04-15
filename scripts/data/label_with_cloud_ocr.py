@@ -8,6 +8,11 @@ from pathlib import Path
 from scripts.data.auto_labeled_common import normalize_text, open_work_db
 from scripts.data.auto_labeled_provider import Provider, WordBox, get_provider
 
+# Pages per SQLite commit. Small enough that a crash loses at most a few
+# minutes of Azure work; large enough that commit overhead stays <1% of
+# per-page cost.
+COMMIT_BATCH_SIZE = 500
+
 
 async def _label_one(
     provider: Provider,
@@ -49,33 +54,39 @@ def run_labeler(
     max_attempts: int = 3,
 ) -> None:
     conn = open_work_db(db_path)
-    pending = list(
-        conn.execute("SELECT id, local_path FROM pages WHERE status = 'pending'")
-    )
-    if not pending:
-        conn.close()
-        return
-    results = asyncio.run(_drain(pending, provider, concurrency, max_attempts))
+    try:
+        pending = list(
+            conn.execute("SELECT id, local_path FROM pages WHERE status = 'pending'")
+        )
+        if not pending:
+            return
+        results = asyncio.run(_drain(pending, provider, concurrency, max_attempts))
 
-    for page_id, boxes, err in results:
-        if err is not None or boxes is None:
-            conn.execute(
-                "UPDATE pages SET status='label_failed', error=? WHERE id=?",
-                (err, page_id),
-            )
-            continue
-        for b in boxes:
-            text = normalize_text(b.text)
-            if not text:
-                continue
-            conn.execute(
-                "INSERT INTO words (page_id, x, y, w, h, text_nfc, conf, provider, status)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'labeled')",
-                (page_id, b.x, b.y, b.w, b.h, text, b.conf, provider.name),
-            )
-        conn.execute("UPDATE pages SET status='labeled' WHERE id=?", (page_id,))
-    conn.commit()
-    conn.close()
+        pages_in_batch = 0
+        for page_id, boxes, err in results:
+            if err is not None or boxes is None:
+                conn.execute(
+                    "UPDATE pages SET status='label_failed', error=? WHERE id=?",
+                    (err, page_id),
+                )
+            else:
+                for b in boxes:
+                    text = normalize_text(b.text)
+                    if not text:
+                        continue
+                    conn.execute(
+                        "INSERT INTO words (page_id, x, y, w, h, text_nfc, conf, provider, status)"
+                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'labeled')",
+                        (page_id, b.x, b.y, b.w, b.h, text, b.conf, provider.name),
+                    )
+                conn.execute("UPDATE pages SET status='labeled' WHERE id=?", (page_id,))
+            pages_in_batch += 1
+            if pages_in_batch >= COMMIT_BATCH_SIZE:
+                conn.commit()
+                pages_in_batch = 0
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def build_parser() -> argparse.ArgumentParser:
