@@ -264,7 +264,6 @@ def _fetch_and_extract_jp2_pages(url: str, max_pages: int) -> list:
     """Download a _jp2.zip and return up to max_pages PIL images."""
     import io
     import zipfile
-    from PIL import Image as _PILImage
 
     with httpx.Client(timeout=600.0, follow_redirects=True) as client:
         with client.stream("GET", url) as resp:
@@ -273,17 +272,18 @@ def _fetch_and_extract_jp2_pages(url: str, max_pages: int) -> list:
             if size and size > ARCHIVE_MAX_ITEM_BYTES:
                 raise RuntimeError(f"item too large: {size} bytes")
             buf = io.BytesIO()
-            for chunk in resp.iter_bytes():
-                buf.write(chunk)
-                if buf.tell() > ARCHIVE_MAX_ITEM_BYTES:
+            for chunk in resp.iter_bytes(chunk_size=65536):
+                if buf.tell() + len(chunk) > ARCHIVE_MAX_ITEM_BYTES:
                     raise RuntimeError("item exceeded cap during stream")
+                buf.write(chunk)
     buf.seek(0)
     images: list = []
     with zipfile.ZipFile(buf) as zf:
         jp2_names = sorted(n for n in zf.namelist() if n.endswith(".jp2"))[:max_pages]
         for name in jp2_names:
             with zf.open(name) as jf:
-                images.append(_PILImage.open(io.BytesIO(jf.read())).convert("L"))
+                img = Image.open(io.BytesIO(jf.read())).convert("L").copy()
+                images.append(img)
     return images
 
 
