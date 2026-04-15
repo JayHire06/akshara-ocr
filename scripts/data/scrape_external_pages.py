@@ -115,6 +115,59 @@ def scrape_wikipedia(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> Non
             _insert_page(conn, "wikipedia", url, out, "fetch_failed", error=str(exc)[:500])
 
 
+# --- Wikisource -----------------------------------------------------------------
+
+WIKISOURCE_API = "https://hi.wikisource.org/w/api.php"
+WIKISOURCE_BASE = "https://hi.wikisource.org/wiki/"
+
+
+def _random_wikisource_page_urls(limit: int) -> list[str]:
+    """Use the MediaWiki API on hi.wikisource to sample random pages in the Page: (ProofreadPage) namespace."""
+    with httpx.Client(timeout=30.0) as client:
+        params = {
+            "action": "query",
+            "format": "json",
+            "list": "random",
+            "rnnamespace": 104,  # Page namespace for ProofreadPage
+            "rnlimit": min(limit, 10),
+        }
+        urls: list[str] = []
+        empty_batches = 0
+        while len(urls) < limit:
+            resp = client.get(WIKISOURCE_API, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            batch = data.get("query", {}).get("random", [])
+            if not batch:
+                empty_batches += 1
+                if empty_batches >= 3:
+                    break
+                continue
+            empty_batches = 0
+            for item in batch:
+                title = item["title"].replace(" ", "_")
+                urls.append(WIKISOURCE_BASE + title)
+                if len(urls) >= limit:
+                    break
+    return urls[:limit]
+
+
+def scrape_wikisource(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> None:
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    urls = _random_wikisource_page_urls(limit)
+    for url in urls:
+        out = raw_dir / f"{uuid.uuid4().hex}.png"
+        try:
+            _screenshot_url(url, out)
+            if not _is_non_blank_png(out):
+                out.unlink(missing_ok=True)
+                _insert_page(conn, "wikisource", url, out, "fetch_failed", error="blank_render")
+                continue
+            _insert_page(conn, "wikisource", url, out, "pending")
+        except Exception as exc:
+            _insert_page(conn, "wikisource", url, out, "fetch_failed", error=str(exc)[:500])
+
+
 # --- CLI entry point -------------------------------------------------------------
 
 
@@ -134,6 +187,8 @@ def main(argv: list[str] | None = None) -> int:
         raw_dir = args.raw_root / args.source
         if args.source == "wikipedia":
             scrape_wikipedia(conn=conn, limit=args.limit, raw_dir=raw_dir)
+        elif args.source == "wikisource":
+            scrape_wikisource(conn=conn, limit=args.limit, raw_dir=raw_dir)
         else:
             print(f"source {args.source} not yet implemented", file=sys.stderr)
             return 2
