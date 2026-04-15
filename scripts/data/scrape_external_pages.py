@@ -233,6 +233,89 @@ def scrape_gov_pdf(
             pdf_local.unlink(missing_ok=True)
 
 
+# --- archive.org ---------------------------------------------------------------
+
+ARCHIVE_SEARCH_URL = "https://archive.org/advancedsearch.php"
+ARCHIVE_MAX_ITEM_BYTES = 300 * 1024 * 1024  # 300 MB cap per item
+
+
+def _search_archive_hindi_text_items(limit_items: int) -> list[tuple[str, str]]:
+    """Return list of (identifier, jp2_zip_url) for Hindi text items."""
+    params = {
+        "q": "language:hin AND mediatype:texts",
+        "fl[]": ["identifier"],
+        "rows": limit_items,
+        "page": 1,
+        "output": "json",
+    }
+    with httpx.Client(timeout=60.0) as client:
+        resp = client.get(ARCHIVE_SEARCH_URL, params=params)
+        resp.raise_for_status()
+        docs = resp.json().get("response", {}).get("docs", [])
+    out: list[tuple[str, str]] = []
+    for d in docs:
+        ident = d["identifier"]
+        jp2 = f"https://archive.org/download/{ident}/{ident}_jp2.zip"
+        out.append((ident, jp2))
+    return out
+
+
+def _fetch_and_extract_jp2_pages(url: str, max_pages: int) -> list:
+    """Download a _jp2.zip and return up to max_pages PIL images."""
+    import io
+    import zipfile
+    from PIL import Image as _PILImage
+
+    with httpx.Client(timeout=600.0, follow_redirects=True) as client:
+        with client.stream("GET", url) as resp:
+            resp.raise_for_status()
+            size = int(resp.headers.get("content-length", 0))
+            if size and size > ARCHIVE_MAX_ITEM_BYTES:
+                raise RuntimeError(f"item too large: {size} bytes")
+            buf = io.BytesIO()
+            for chunk in resp.iter_bytes():
+                buf.write(chunk)
+                if buf.tell() > ARCHIVE_MAX_ITEM_BYTES:
+                    raise RuntimeError("item exceeded cap during stream")
+    buf.seek(0)
+    images: list = []
+    with zipfile.ZipFile(buf) as zf:
+        jp2_names = sorted(n for n in zf.namelist() if n.endswith(".jp2"))[:max_pages]
+        for name in jp2_names:
+            with zf.open(name) as jf:
+                images.append(_PILImage.open(io.BytesIO(jf.read())).convert("L"))
+    return images
+
+
+def scrape_archive_org(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> None:
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    items_needed = max(1, limit // 20)
+    items = _search_archive_hindi_text_items(items_needed + 5)
+    pages_written = 0
+    for ident, url in items:
+        if pages_written >= limit:
+            break
+        try:
+            imgs = _fetch_and_extract_jp2_pages(url, max_pages=min(20, limit - pages_written))
+        except Exception as exc:
+            _insert_page(conn, "archive_org", url, raw_dir / f"{ident}.skip", "fetch_failed", error=str(exc)[:500])
+            continue
+        if not imgs:
+            _insert_page(conn, "archive_org", url, raw_dir / f"{ident}.skip", "fetch_failed", error="zero_pages")
+            continue
+        for img in imgs:
+            if pages_written >= limit:
+                break
+            out = raw_dir / f"{uuid.uuid4().hex}.png"
+            img.save(out, format="PNG")
+            if not _is_non_blank_png(out):
+                out.unlink(missing_ok=True)
+                _insert_page(conn, "archive_org", url, out, "fetch_failed", error="blank_render")
+                continue
+            _insert_page(conn, "archive_org", url, out, "pending")
+            pages_written += 1
+
+
 # --- CLI entry point -------------------------------------------------------------
 
 
@@ -256,6 +339,8 @@ def main(argv: list[str] | None = None) -> int:
             scrape_wikisource(conn=conn, limit=args.limit, raw_dir=raw_dir)
         elif args.source == "gov_pdf":
             scrape_gov_pdf(conn=conn, limit=args.limit, raw_dir=raw_dir)
+        elif args.source == "archive_org":
+            scrape_archive_org(conn=conn, limit=args.limit, raw_dir=raw_dir)
         else:
             print(f"source {args.source} not yet implemented", file=sys.stderr)
             return 2
