@@ -1,0 +1,14 @@
+# PLACEHOLDER STARTER LIST — these URLs have not been validated for live access.
+# Before running the real scraper, replace or extend with verified public-domain
+# Hindi PDF URLs. Lines starting with '#' are ignored by _load_seeds().
+
+https://www.indiabudget.gov.in/doc/Budget_Speech.pdf
+https://egazette.nic.in/WriteReadData/2024/ExampleHindi.pdf
+https://main.sci.gov.in/supremecourt/2023/Example/hindi.pdf
+https://www.rbi.org.in/hindi/Scripts/Publications.aspx/AnnualReport2023Hindi.pdf
+https://prsindia.org/files/bills_acts/bills_parliament/2023/Hindi_Bill_Example.pdf
+https://www.indiabudget.gov.in/doc/rec/annex1_hindi.pdf
+https://egazette.nic.in/WriteReadData/2023/HindiGazette_Example.pdf
+https://main.sci.gov.in/supremecourt/2022/Example/judgment_hindi.pdf
+https://rbi.org.in/hindi/Scripts/Publications.aspx/MonetaryReport2023Hindi.pdf
+https://prsindia.org/files/bills_acts/bills_parliament/2022/Finance_Bill_Hindi.pdf

@@ -168,6 +168,64 @@ def scrape_wikisource(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> No
             _insert_page(conn, "wikisource", url, out, "fetch_failed", error=str(exc)[:500])
 
 
+# --- Gov PDFs -------------------------------------------------------------------
+
+DEFAULT_GOV_SEEDS = Path(__file__).parent / "auto_labeled_gov_seeds.txt"
+
+
+def _load_seeds(path: Path) -> list[str]:
+    return [
+        line.strip()
+        for line in Path(path).read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+
+def _download_pdf(url: str, dest: Path) -> None:
+    with httpx.Client(timeout=120.0, follow_redirects=True) as client:
+        resp = client.get(url)
+        resp.raise_for_status()
+    Path(dest).write_bytes(resp.content)
+
+
+def _rasterize_pdf(pdf_path: Path) -> list:
+    from pdf2image import convert_from_path
+    return convert_from_path(str(pdf_path), dpi=300)
+
+
+def scrape_gov_pdf(
+    conn: sqlite3.Connection,
+    limit: int,
+    raw_dir: Path,
+    seeds_path: Path = DEFAULT_GOV_SEEDS,
+) -> None:
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    seeds = _load_seeds(seeds_path)
+    if not seeds:
+        return
+    pages_written = 0
+    for url in seeds:
+        if pages_written >= limit:
+            break
+        pdf_local = raw_dir / f"{uuid.uuid4().hex}.pdf"
+        try:
+            _download_pdf(url, pdf_local)
+            images = _rasterize_pdf(pdf_local)
+        except Exception as exc:
+            _insert_page(conn, "gov_pdf", url, pdf_local, "fetch_failed", error=str(exc)[:500])
+            continue
+        for img in images:
+            if pages_written >= limit:
+                break
+            out = raw_dir / f"{uuid.uuid4().hex}.png"
+            img.save(out, format="PNG")
+            if not _is_non_blank_png(out):
+                _insert_page(conn, "gov_pdf", url, out, "fetch_failed", error="blank_render")
+                continue
+            _insert_page(conn, "gov_pdf", url, out, "pending")
+            pages_written += 1
+
+
 # --- CLI entry point -------------------------------------------------------------
 
 
@@ -189,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
             scrape_wikipedia(conn=conn, limit=args.limit, raw_dir=raw_dir)
         elif args.source == "wikisource":
             scrape_wikisource(conn=conn, limit=args.limit, raw_dir=raw_dir)
+        elif args.source == "gov_pdf":
+            scrape_gov_pdf(conn=conn, limit=args.limit, raw_dir=raw_dir)
         else:
             print(f"source {args.source} not yet implemented", file=sys.stderr)
             return 2
