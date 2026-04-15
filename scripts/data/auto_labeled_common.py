@@ -61,9 +61,13 @@ def open_work_db(path: Path) -> sqlite3.Connection:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(path))
-    conn.execute("PRAGMA journal_mode=WAL;")
-    conn.execute("PRAGMA foreign_keys=ON;")
-    with SCHEMA_PATH.open("r", encoding="utf-8") as f:
-        conn.executescript(f.read())
-    conn.commit()
+    try:
+        with SCHEMA_PATH.open("r", encoding="utf-8") as f:
+            conn.executescript(f.read())
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA foreign_keys=ON;")
+        conn.commit()
+    except Exception:
+        conn.close()
+        raise
     return conn

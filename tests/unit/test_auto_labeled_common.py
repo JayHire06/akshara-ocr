@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-import sqlite3
-import tempfile
 import unicodedata
 from pathlib import Path
-
-import pytest
 
 from scripts.data.auto_labeled_common import (
     atomic_write_text,
@@ -68,4 +64,6 @@ def test_open_work_db_initializes_schema(tmp_path: Path):
         )
     }
     assert {"pages", "words", "manifest"} <= tables
+    assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+    assert conn.execute("PRAGMA foreign_keys").fetchone()[0] == 1
     conn.close()
