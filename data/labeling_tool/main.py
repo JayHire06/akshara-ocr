@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import datetime as _dt
+import hashlib
+import json
 import os
 import sqlite3
 from pathlib import Path
@@ -180,3 +182,68 @@ async def qa_stats():
     finally:
         conn.close()
     return {"total": total, "decided": decided, "per_source": per_source}
+
+
+DEFAULT_AUTO_NORMALIZED = Path("data/external/auto_labeled/normalized")
+DEFAULT_AUTO_MANIFEST = Path("data/external/auto_labeled/manifests/manifest.json")
+
+
+def _normalized_dir() -> Path:
+    return Path(os.environ.get("AUTO_LABELED_NORMALIZED_DIR", str(DEFAULT_AUTO_NORMALIZED)))
+
+
+def _manifest_path() -> Path:
+    return Path(os.environ.get("AUTO_LABELED_MANIFEST", str(DEFAULT_AUTO_MANIFEST)))
+
+
+@app.get("/qa/export")
+async def qa_export():
+    conn = _auto_conn()
+    try:
+        rows = list(
+            conn.execute(
+                """
+                SELECT w.id, w.text_nfc, w.qa_decision, w.qa_edited_text, p.source
+                FROM words w JOIN pages p ON p.id = w.page_id
+                WHERE w.status='exported_qa_candidate'
+                  AND w.qa_decision IN ('accept','edit')
+                ORDER BY w.id
+                """
+            )
+        )
+    finally:
+        conn.close()
+
+    lines: list[str] = []
+    crops_dir = _normalized_dir() / "crops"
+    for wid, text, decision, edited, _source in rows:
+        final_text = edited if decision == "edit" and edited else text
+        img_path = crops_dir / f"{wid}.png"
+        lines.append(f"{img_path}|{final_text}")
+
+    out = _normalized_dir() / "verified_test_labels.txt"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    body = "\n".join(lines) + ("\n" if lines else "")
+
+    tmp = out.with_suffix(out.suffix + ".tmp")
+    tmp.write_text(body, encoding="utf-8")
+    os.replace(tmp, out)
+
+    sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    manifest_path = _manifest_path()
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    existing: dict = {}
+    if manifest_path.exists():
+        try:
+            existing = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            existing = {}
+    existing["verified_test_labels"] = {
+        "path": str(out),
+        "sha256": sha,
+        "count": len(lines),
+    }
+    manifest_path.write_text(
+        json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return JSONResponse({"exported": len(lines), "sha256": sha, "path": str(out)})
