@@ -202,6 +202,76 @@ def symmetric_qa_eviction(conn: sqlite3.Connection) -> int:
     return cur.rowcount
 
 
+def audit_disjointness(conn: sqlite3.Connection) -> dict[str, int]:
+    """Return the four audit counts. All must be zero in a correct run."""
+    def _count(sql: str) -> int:
+        return conn.execute(sql).fetchone()[0]
+
+    return {
+        "kept_vs_existing_val": _count(
+            "SELECT COUNT(*) FROM words"
+            " WHERE status='kept' AND text_nfc IN (SELECT text_nfc FROM existing_val_strings)"
+        ),
+        "kept_vs_existing_test": _count(
+            "SELECT COUNT(*) FROM words"
+            " WHERE status='kept' AND text_nfc IN (SELECT text_nfc FROM existing_test_strings)"
+        ),
+        "kept_vs_existing_bench": _count(
+            "SELECT COUNT(*) FROM words"
+            " WHERE status='kept' AND text_nfc IN (SELECT text_nfc FROM existing_bench_strings)"
+        ),
+        "kept_vs_qa_candidate": _count(
+            "SELECT COUNT(*) FROM words w1"
+            " WHERE w1.status='kept'"
+            " AND w1.text_nfc IN (SELECT text_nfc FROM words WHERE status='exported_qa_candidate')"
+        ),
+    }
+
+
+def levenshtein_audit_sample(
+    kept_texts: list[str],
+    val_texts: list[str],
+    sample_size: int = 100,
+) -> list[tuple[str, str, int]]:
+    """Return up to sample_size (kept, val, distance) triples where Levenshtein <= 1."""
+    import random
+    try:
+        from Levenshtein import distance as lev  # type: ignore
+    except ImportError:
+        # Pure-Python fallback. O(n*m) per call, fine for the bounded
+        # (<= 500 x <= 500) samples this audit draws.
+        def lev(a: str, b: str) -> int:
+            if a == b:
+                return 0
+            if not a:
+                return len(b)
+            if not b:
+                return len(a)
+            prev = list(range(len(b) + 1))
+            for i, ca in enumerate(a, start=1):
+                curr = [i] + [0] * len(b)
+                for j, cb in enumerate(b, start=1):
+                    curr[j] = min(
+                        curr[j - 1] + 1,
+                        prev[j] + 1,
+                        prev[j - 1] + (0 if ca == cb else 1),
+                    )
+                prev = curr
+            return prev[-1]
+
+    out: list[tuple[str, str, int]] = []
+    kept_sample = random.sample(kept_texts, min(len(kept_texts), 500))
+    val_sample = random.sample(val_texts, min(len(val_texts), 500))
+    for kt in kept_sample:
+        for vt in val_sample:
+            d = lev(kt, vt)
+            if d <= 1:
+                out.append((kt, vt, d))
+                if len(out) >= sample_size:
+                    return out
+    return out
+
+
 def load_vocab(vocab_path: Path) -> set[str]:
     data = json.loads(Path(vocab_path).read_text(encoding="utf-8"))
     if isinstance(data, list):
