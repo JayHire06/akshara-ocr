@@ -142,6 +142,66 @@ def apply_text_disjoint_rule_1(
     )
 
 
+def promote_labeled_to_kept(conn: sqlite3.Connection) -> None:
+    conn.execute("UPDATE words SET status='kept' WHERE status='labeled'")
+
+
+def select_qa_candidates(conn: sqlite3.Connection, target_per_source: int = 500) -> None:
+    """Promote kept rows to exported_qa_candidate using unique-text predicate.
+
+    Assumes existing_val_strings, existing_test_strings, existing_bench_strings temp
+    tables exist from apply_text_disjoint_rule_1; if not, creates empty ones so the
+    query still works.
+    """
+    for name in ("existing_val_strings", "existing_test_strings", "existing_bench_strings"):
+        conn.execute(f"CREATE TEMP TABLE IF NOT EXISTS {name} (text_nfc TEXT PRIMARY KEY)")
+
+    conn.execute(
+        """
+        WITH unique_text_kept AS (
+            SELECT id, text_nfc, page_id
+            FROM words
+            WHERE status = 'kept'
+              AND text_nfc IN (
+                  SELECT text_nfc FROM words WHERE status = 'kept'
+                  GROUP BY text_nfc HAVING COUNT(*) = 1
+              )
+              AND text_nfc NOT IN (SELECT text_nfc FROM existing_val_strings)
+              AND text_nfc NOT IN (SELECT text_nfc FROM existing_test_strings)
+              AND text_nfc NOT IN (SELECT text_nfc FROM existing_bench_strings)
+        ),
+        ranked AS (
+            SELECT u.id, u.text_nfc, p.source,
+                   ROW_NUMBER() OVER (PARTITION BY p.source ORDER BY RANDOM()) AS rn
+            FROM unique_text_kept u JOIN pages p ON p.id = u.page_id
+        )
+        UPDATE words
+        SET status='exported_qa_candidate'
+        WHERE id IN (SELECT id FROM ranked WHERE rn <= ?)
+        """,
+        (target_per_source,),
+    )
+
+
+def symmetric_qa_eviction(conn: sqlite3.Connection) -> int:
+    """Belt-and-suspenders: evict any kept row whose text matches an exported candidate.
+
+    Returns the number of rows affected. In a correct run this must be zero.
+    """
+    cur = conn.execute(
+        """
+        UPDATE words
+        SET status='filtered_text_leak',
+            filter_reason='leak_vs_qa_candidate'
+        WHERE status='kept'
+          AND text_nfc IN (
+              SELECT DISTINCT text_nfc FROM words WHERE status='exported_qa_candidate'
+          )
+        """
+    )
+    return cur.rowcount
+
+
 def load_vocab(vocab_path: Path) -> set[str]:
     data = json.loads(Path(vocab_path).read_text(encoding="utf-8"))
     if isinstance(data, list):
