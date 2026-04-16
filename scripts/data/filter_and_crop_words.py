@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.data.auto_labeled_common import open_work_db
+from scripts.data.auto_labeled_common import load_text_strings, open_work_db
 
 
 def filter_confidence(conn: sqlite3.Connection, min_conf: float) -> None:
@@ -93,6 +93,53 @@ def filter_dup(conn: sqlite3.Connection) -> None:
             "UPDATE words SET status='filtered_dup', filter_reason='dup' WHERE id=?",
             [(i,) for i in dup_ids],
         )
+
+
+def _load_all_strings(
+    val: list[Path],
+    test: list[Path],
+    bench: list[Path],
+) -> tuple[set[str], set[str], set[str]]:
+    return (
+        load_text_strings(val),
+        load_text_strings(test),
+        load_text_strings(bench),
+    )
+
+
+def apply_text_disjoint_rule_1(
+    conn: sqlite3.Connection,
+    existing_val: list[Path],
+    existing_test: list[Path],
+    existing_benchmarks: list[Path],
+) -> None:
+    val, test, bench = _load_all_strings(existing_val, existing_test, existing_benchmarks)
+
+    conn.execute("DROP TABLE IF EXISTS temp.existing_val_strings")
+    conn.execute("DROP TABLE IF EXISTS temp.existing_test_strings")
+    conn.execute("DROP TABLE IF EXISTS temp.existing_bench_strings")
+    conn.execute("CREATE TEMP TABLE existing_val_strings (text_nfc TEXT PRIMARY KEY)")
+    conn.execute("CREATE TEMP TABLE existing_test_strings (text_nfc TEXT PRIMARY KEY)")
+    conn.execute("CREATE TEMP TABLE existing_bench_strings (text_nfc TEXT PRIMARY KEY)")
+    conn.executemany("INSERT OR IGNORE INTO existing_val_strings VALUES (?)", [(s,) for s in val])
+    conn.executemany("INSERT OR IGNORE INTO existing_test_strings VALUES (?)", [(s,) for s in test])
+    conn.executemany("INSERT OR IGNORE INTO existing_bench_strings VALUES (?)", [(s,) for s in bench])
+
+    conn.execute(
+        """
+        UPDATE words
+        SET status='filtered_text_leak',
+            filter_reason='leak_vs_existing_val_test_bench'
+        WHERE status='labeled'
+          AND text_nfc IN (
+              SELECT text_nfc FROM existing_val_strings
+              UNION
+              SELECT text_nfc FROM existing_test_strings
+              UNION
+              SELECT text_nfc FROM existing_bench_strings
+          )
+        """
+    )
 
 
 def load_vocab(vocab_path: Path) -> set[str]:
