@@ -36,6 +36,7 @@ def filter_bbox(
     conn: sqlite3.Connection,
     page_dims: dict[int, tuple[int, int]] | None = None,
 ) -> None:
+    failed_pages: set[int] = set()
     if page_dims is None:
         page_dims = {}
         for pid, lp in conn.execute("SELECT id, local_path FROM pages"):
@@ -44,22 +45,34 @@ def filter_bbox(
                     page_dims[pid] = im.size
             except Exception:
                 page_dims[pid] = (0, 0)
+                failed_pages.add(pid)
 
-    bad_ids: list[int] = []
+    # Separate "real OOB bbox" from "page file failed to open" so downstream
+    # audits can distinguish a genuine bad label from a missing/corrupt page.
+    bbox_bad: list[int] = []
+    page_bad: list[int] = []
     for wid, pid, x, y, w, h in conn.execute(
         "SELECT id, page_id, x, y, w, h FROM words WHERE status='labeled'"
     ):
+        if pid in failed_pages:
+            page_bad.append(wid)
+            continue
         W, H = page_dims.get(pid, (0, 0))
         x2 = min(x + w, W)
         y2 = min(y + h, H)
         x = max(x, 0)
         y = max(y, 0)
         if x2 - x <= 0 or y2 - y <= 0 or W == 0 or H == 0:
-            bad_ids.append(wid)
-    if bad_ids:
+            bbox_bad.append(wid)
+    if bbox_bad:
         conn.executemany(
             "UPDATE words SET status='filtered_invalid_bbox', filter_reason='bbox_oob' WHERE id=?",
-            [(i,) for i in bad_ids],
+            [(i,) for i in bbox_bad],
+        )
+    if page_bad:
+        conn.executemany(
+            "UPDATE words SET status='filtered_invalid_bbox', filter_reason='page_open_failed' WHERE id=?",
+            [(i,) for i in page_bad],
         )
 
 

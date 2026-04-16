@@ -64,6 +64,41 @@ def test_filter_bbox(tmp_path):
     assert rows["B"] == "filtered_invalid_bbox"
 
 
+def test_filter_bbox_distinguishes_page_open_failure(tmp_path):
+    # Page 1 has a working image file; page 2 points at a non-existent path.
+    # Both have a word that would otherwise pass bbox validation.
+    from PIL import Image
+
+    conn = open_work_db(tmp_path / "w.db")
+    good_img = tmp_path / "good.png"
+    Image.new("L", (200, 200), 255).save(good_img)
+    conn.execute(
+        "INSERT INTO pages (id, source, uri, local_path, fetched_at, status)"
+        " VALUES (?, 'wikipedia', 'u', ?, '2026-04-16', 'labeled')",
+        (1, str(good_img)),
+    )
+    conn.execute(
+        "INSERT INTO pages (id, source, uri, local_path, fetched_at, status)"
+        " VALUES (?, 'wikipedia', 'u', ?, '2026-04-16', 'labeled')",
+        (2, str(tmp_path / "does_not_exist.png")),
+    )
+    _seed_word(conn, 1, "A", 0.99, x=10, y=10, w=50, h=50)  # inside good page
+    _seed_word(conn, 1, "B", 0.99, x=500, y=500, w=50, h=50)  # outside good page
+    _seed_word(conn, 2, "C", 0.99, x=10, y=10, w=50, h=50)  # word on broken page
+    conn.commit()
+
+    filter_bbox(conn)
+    rows = dict(
+        (text, (status, reason))
+        for text, status, reason in conn.execute(
+            "SELECT text_nfc, status, filter_reason FROM words"
+        )
+    )
+    assert rows["A"] == ("labeled", None)
+    assert rows["B"] == ("filtered_invalid_bbox", "bbox_oob")
+    assert rows["C"] == ("filtered_invalid_bbox", "page_open_failed")
+
+
 def test_filter_dup(tmp_path):
     conn = open_work_db(tmp_path / "w.db")
     _seed_page(conn, 1)
