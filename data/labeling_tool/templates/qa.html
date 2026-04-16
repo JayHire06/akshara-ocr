@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>QA</title></head>
+<body>
+{% if done %}
+  <p>No more candidates.</p>
+{% else %}
+  <p>Candidate word id: {{ word.id }}</p>
+  <p>Text: {{ word.text_nfc }}</p>
+{% endif %}
+</body>
+</html>
