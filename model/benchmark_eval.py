@@ -15,6 +15,18 @@ from model.ctc_decoder import CTCDecoder
 import unicodedata
 
 
+KNOWN_BENCHMARK_SUITES: tuple[str, ...] = (
+    "synthetic_only",
+    "synthetic_morphed_plus_real",
+    "real_only",
+    "auto_labeled_verified_printed",
+)
+
+AUTO_LABELED_VERIFIED_LABELS_PATH = (
+    "data/external/auto_labeled/normalized/verified_test_labels.txt"
+)
+
+
 def normalize_text(text: str) -> str:
     if not text:
         return ""

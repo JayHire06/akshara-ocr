@@ -64,12 +64,24 @@ TRAIN_LABELS   = DATA_DIR / "train_labels.txt"
 VAL_LABELS     = DATA_DIR / "val_labels.txt"
 VOCAB_FILE     = DATA_DIR / "vocab.json"
 
+# Curriculum stages consumed by downstream staged-training orchestration.
+# Purely declarative — the training loop currently trains on the combined
+# labels above, but these entries document the intended stage progression so
+# the auto-labeled printed stage (Task 18) is discoverable alongside synthetic
+# and Mozhi stages. Paths resolve under data/v8/stages/.
+CURRICULUM_STAGES: tuple[str, ...] = (
+    "stage_synthetic",
+    "stage_auto_labeled_printed",
+    "stage_mozhi",
+)
+
 sys.path.insert(0, str(ROOT_DIR))
 
 from data.dataset import OCRDatasetV6                           # noqa: E402
 from model.benchmark_eval import levenshtein_distance, normalize_text  # noqa: E402
 from model.crnn_v9 import CRNNv9, ExponentialMovingAverage      # noqa: E402
 from model.ctc_decoder import CTCDecoder                        # noqa: E402
+from scripts.training._trackio_logger import TrackioLogger      # noqa: E402
 
 
 # ── Hyperparameters ─────────────────────────────────────────────────────────
@@ -261,6 +273,12 @@ def main() -> None:
     with open(run_dir / "config.json", "w", encoding="utf-8") as f:
         json.dump(CFG, f, indent=2)
 
+    tracker = TrackioLogger(
+        project="akshara-ocr",
+        name=run_dir.name,
+        config={**CFG, "arch": "CRNNv9", "dataset": "data/combined (text-disjoint)"},
+    )
+
     vocab = load_vocab()
     vocab_list = [""] * len(vocab)
     for ch, idx in vocab.items():
@@ -395,6 +413,23 @@ def main() -> None:
                 "elapsed": dt,
             }) + "\n")
 
+        bl_flat = {}
+        for bucket_name, bucket in m["by_length"].items():
+            if bucket.get("cer") is not None:
+                bl_flat[f"val/cer_{bucket_name}"] = bucket["cer"]
+        tracker.log(
+            {
+                "train/loss": avg_loss,
+                "train/lr": scheduler.get_last_lr()[0],
+                "val/cer": m["cer"],
+                "val/wer": m["wer"],
+                "val/exact_match": m["exact_match"],
+                "epoch_time_sec": dt,
+                **bl_flat,
+            },
+            step=epoch,
+        )
+
         if m["cer"] < best_cer:
             best_cer = m["cer"]
             epochs_without_improvement = 0
@@ -412,6 +447,9 @@ def main() -> None:
                     f"without CER improvement (best={best_cer*100:.2f}%)"
                 )
                 break
+
+    tracker.log({"best/val_cer": best_cer})
+    tracker.finish()
 
     print("=" * 60)
     print(f"Training complete. Best EMA val CER: {best_cer*100:.2f}%")
