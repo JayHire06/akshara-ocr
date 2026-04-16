@@ -279,3 +279,147 @@ def load_vocab(vocab_path: Path) -> set[str]:
     if isinstance(data, dict):
         return set(data.keys())
     raise ValueError(f"unsupported vocab format in {vocab_path}")
+
+
+def _crop_word(page_path: Path, x: int, y: int, w: int, h: int, out_path: Path, target_h: int = 32) -> None:
+    with Image.open(page_path) as im:
+        W, H = im.size
+        x1 = max(x, 0)
+        y1 = max(y, 0)
+        x2 = min(x + w, W)
+        y2 = min(y + h, H)
+        crop = im.crop((x1, y1, x2, y2))
+        if crop.height != target_h:
+            ratio = target_h / max(crop.height, 1)
+            new_w = max(1, int(crop.width * ratio))
+            crop = crop.resize((new_w, target_h))
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        crop.save(out_path, format="PNG")
+
+
+def emit_labels_and_crops(
+    conn: sqlite3.Connection,
+    normalized_dir: Path,
+    auto_val_fraction: float = 0.10,
+) -> dict[str, int]:
+    crops_dir = normalized_dir / "crops"
+    crops_dir.mkdir(parents=True, exist_ok=True)
+
+    page_paths = dict(conn.execute("SELECT id, local_path FROM pages"))
+
+    kept_rows = list(
+        conn.execute(
+            "SELECT w.id, w.page_id, w.x, w.y, w.w, w.h, w.text_nfc, p.source"
+            " FROM words w JOIN pages p ON p.id=w.page_id WHERE w.status='kept' ORDER BY w.id"
+        )
+    )
+    qa_rows = list(
+        conn.execute(
+            "SELECT w.id, w.page_id, w.x, w.y, w.w, w.h, w.text_nfc, p.source"
+            " FROM words w JOIN pages p ON p.id=w.page_id WHERE w.status='exported_qa_candidate' ORDER BY w.id"
+        )
+    )
+
+    import random
+    val_pick: set[int] = set()
+    if auto_val_fraction > 0:
+        by_source: dict[str, list[int]] = {}
+        for wid, _, _, _, _, _, _, src in kept_rows:
+            by_source.setdefault(src, []).append(wid)
+        for src, ids in by_source.items():
+            k = max(1, int(len(ids) * auto_val_fraction))
+            val_pick.update(random.sample(ids, min(k, len(ids))))
+
+    train_lines: list[str] = []
+    val_lines: list[str] = []
+    qa_lines: list[str] = []
+
+    for wid, pid, x, y, w, h, text, _src in kept_rows:
+        out = crops_dir / f"{wid}.png"
+        _crop_word(Path(page_paths[pid]), x, y, w, h, out)
+        line = f"{out}|{text}"
+        if wid in val_pick:
+            val_lines.append(line)
+        else:
+            train_lines.append(line)
+
+    for wid, pid, x, y, w, h, text, _src in qa_rows:
+        out = crops_dir / f"{wid}.png"
+        _crop_word(Path(page_paths[pid]), x, y, w, h, out)
+        qa_lines.append(f"{out}|{text}|{wid}")
+
+    from scripts.data.auto_labeled_common import atomic_write_text
+    atomic_write_text(normalized_dir / "train_labels.txt", "\n".join(train_lines) + ("\n" if train_lines else ""))
+    atomic_write_text(normalized_dir / "val_labels.txt", "\n".join(val_lines) + ("\n" if val_lines else ""))
+    atomic_write_text(normalized_dir / "qa_candidates.txt", "\n".join(qa_lines) + ("\n" if qa_lines else ""))
+
+    return {
+        "train": len(train_lines),
+        "val": len(val_lines),
+        "qa_candidates": len(qa_lines),
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="Filter labeled words and emit normalized label files.")
+    p.add_argument("--db", type=Path, default=Path("data/external/auto_labeled/work.db"))
+    p.add_argument("--min-conf", type=float, default=0.85)
+    p.add_argument("--vocab", type=Path, default=Path("data/vocab.json"))
+    p.add_argument("--existing-val", type=Path, nargs="*", default=[Path("data/combined/val_labels.txt")])
+    p.add_argument("--existing-test", type=Path, nargs="*", default=[Path("data/combined/test_labels.txt")])
+    p.add_argument("--existing-benchmarks", type=Path, nargs="*", default=[])
+    p.add_argument(
+        "--normalized-dir",
+        type=Path,
+        default=Path("data/external/auto_labeled/normalized"),
+    )
+    p.add_argument("--manifest", type=Path, default=Path("data/external/auto_labeled/manifests/manifest.json"))
+    p.add_argument("--qa-per-source", type=int, default=500)
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    conn = open_work_db(args.db)
+    try:
+        vocab = load_vocab(args.vocab)
+        filter_confidence(conn, min_conf=args.min_conf)
+        filter_oov(conn, vocab=vocab)
+        filter_bbox(conn)
+        filter_dup(conn)
+        apply_text_disjoint_rule_1(
+            conn,
+            existing_val=args.existing_val,
+            existing_test=args.existing_test,
+            existing_benchmarks=args.existing_benchmarks,
+        )
+        promote_labeled_to_kept(conn)
+        select_qa_candidates(conn, target_per_source=args.qa_per_source)
+        affected = symmetric_qa_eviction(conn)
+        counts = audit_disjointness(conn)
+        if any(v != 0 for v in counts.values()) or affected != 0:
+            print(f"AUDIT FAILED: {counts} symmetric_evicted={affected}", file=sys.stderr)
+            conn.rollback()
+            return 3
+        emitted = emit_labels_and_crops(conn, normalized_dir=args.normalized_dir)
+        args.manifest.parent.mkdir(parents=True, exist_ok=True)
+        args.manifest.write_text(
+            json.dumps(
+                {
+                    "emitted": emitted,
+                    "audit_counts": counts,
+                    "min_conf": args.min_conf,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
