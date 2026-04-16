@@ -72,3 +72,16 @@ def test_qa_decide_edit_stores_text(tmp_path):
         "SELECT qa_decision, qa_edited_text FROM words WHERE id=?", (int(wid),)
     ).fetchone()
     assert row == ("edit", "नयाtext")
+
+
+def test_qa_template_renders_with_keyboard_hints(tmp_path):
+    db = tmp_path / "work.db"
+    _seed_candidates(db, 1)
+    client = TestClient(_make_app(db))
+    r = client.get("/qa")
+    assert r.status_code == 200
+    body = r.text
+    assert "Enter" in body
+    assert "Accept" in body
+    assert "Reject" in body
+    assert "Edit" in body

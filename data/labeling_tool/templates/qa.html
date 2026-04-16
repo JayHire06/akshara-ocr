@@ -1,12 +1,85 @@
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>QA</title></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>QA — verify teacher predictions</title>
+  <style>
+    body { font-family: sans-serif; max-width: 820px; margin: 2em auto; padding: 0 1em; }
+    .done { font-size: 2em; text-align: center; color: #2a7f3a; }
+    .crop { background: #f4f4f4; padding: 1em; text-align: center; border-radius: 8px; }
+    .crop img { max-width: 100%; image-rendering: pixelated; transform: scale(4); transform-origin: center; margin: 4em 0; }
+    .pred { font-size: 2.5em; text-align: center; margin: 0.5em 0; font-weight: 600; }
+    .meta { display: flex; justify-content: space-between; color: #666; margin-top: 0.5em; }
+    .actions button { font-size: 1em; padding: 0.5em 1em; margin-right: 0.5em; }
+    kbd { background: #eee; border-radius: 4px; padding: 0 0.3em; font-family: monospace; }
+    #edit-box { display: none; margin-top: 1em; }
+    #edit-box input { font-size: 1.5em; width: 100%; padding: 0.3em; }
+  </style>
+</head>
 <body>
 {% if done %}
-  <p>No more candidates.</p>
+  <div class="done">All candidates decided.<br>Click <a href="/qa/export">Export verified test labels</a>.</div>
 {% else %}
-  <p>Candidate word id: {{ word.id }}</p>
-  <p>Text: {{ word.text_nfc }}</p>
+  <h1>QA — {{ word.source }}</h1>
+  <div class="crop">
+    <img src="/images/{{ word.id }}.png" alt="word crop">
+  </div>
+  <div class="pred" id="pred">{{ word.text_nfc }}</div>
+  <div class="meta">
+    <span>Confidence: {{ "%.2f"|format(word.conf) }}</span>
+    <span>Word ID: {{ word.id }}</span>
+  </div>
+
+  <form method="post" action="/qa/decide" id="decide-form">
+    <input type="hidden" name="word_id" value="{{ word.id }}">
+    <input type="hidden" name="action" id="action-field" value="accept">
+    <div id="edit-box">
+      <input type="text" name="edited_text" id="edited-text" value="{{ word.text_nfc }}">
+    </div>
+    <div class="actions" style="margin-top: 1em;">
+      <button type="button" id="accept-btn">Accept <kbd>Enter</kbd></button>
+      <button type="button" id="edit-btn">Edit <kbd>e</kbd></button>
+      <button type="button" id="reject-btn">Reject <kbd>r</kbd></button>
+    </div>
+  </form>
+
+  <script>
+  (function () {
+    const form = document.getElementById('decide-form');
+    const actionField = document.getElementById('action-field');
+    const editBox = document.getElementById('edit-box');
+    const editInput = document.getElementById('edited-text');
+
+    function submitWith(action) {
+      actionField.value = action;
+      form.submit();
+    }
+
+    document.getElementById('accept-btn').addEventListener('click', () => submitWith('accept'));
+    document.getElementById('reject-btn').addEventListener('click', () => submitWith('reject'));
+    document.getElementById('edit-btn').addEventListener('click', () => {
+      editBox.style.display = 'block';
+      editInput.focus();
+    });
+
+    document.addEventListener('keydown', (ev) => {
+      const editing = editBox.style.display === 'block';
+      if (editing) {
+        if (ev.key === 'Enter') { submitWith('edit'); ev.preventDefault(); }
+        if (ev.key === 'Escape') { editBox.style.display = 'none'; }
+        return;
+      }
+      if (ev.key === 'Enter' || ev.key === ' ') { submitWith('accept'); ev.preventDefault(); }
+      if (ev.key === 'e' || ev.key === 'E') {
+        editBox.style.display = 'block';
+        editInput.focus();
+        ev.preventDefault();
+      }
+      if (ev.key === 'r' || ev.key === 'R') { submitWith('reject'); ev.preventDefault(); }
+      if (ev.key === 'b' || ev.key === 'B') { window.history.back(); ev.preventDefault(); }
+    });
+  })();
+  </script>
 {% endif %}
 </body>
 </html>
