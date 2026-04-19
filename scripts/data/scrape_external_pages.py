@@ -17,6 +17,12 @@ WIKIPEDIA_BASE = "https://hi.wikipedia.org/wiki/"
 
 SOURCES = ("wikipedia", "wikisource", "gov_pdf", "archive_org")
 
+# Wikimedia's User-Agent policy requires identification with contact info; other
+# sources tolerate any UA but benefit from the same identification.
+# See https://meta.wikimedia.org/wiki/User-Agent_policy
+USER_AGENT = "akshara-ocr-pipeline/0.1 (https://github.com/JayHire06/akshara-ocr)"
+DEFAULT_HEADERS = {"User-Agent": USER_AGENT}
+
 
 def _now_iso() -> str:
     return _dt.datetime.now(_dt.timezone.utc).isoformat()
@@ -56,7 +62,7 @@ def _insert_page(
 
 def _random_wikipedia_article_urls(limit: int) -> list[str]:
     """Use the MediaWiki API to pick `limit` random article URLs from hi.wikipedia."""
-    with httpx.Client(timeout=30.0) as client:
+    with httpx.Client(timeout=30.0, headers=DEFAULT_HEADERS) as client:
         params = {
             "action": "query",
             "format": "json",
@@ -123,7 +129,7 @@ WIKISOURCE_BASE = "https://hi.wikisource.org/wiki/"
 
 def _random_wikisource_page_urls(limit: int) -> list[str]:
     """Use the MediaWiki API on hi.wikisource to sample random pages in the Page: (ProofreadPage) namespace."""
-    with httpx.Client(timeout=30.0) as client:
+    with httpx.Client(timeout=30.0, headers=DEFAULT_HEADERS) as client:
         params = {
             "action": "query",
             "format": "json",
@@ -182,7 +188,7 @@ def _load_seeds(path: Path) -> list[str]:
 
 
 def _download_pdf(url: str, dest: Path) -> None:
-    with httpx.Client(timeout=120.0, follow_redirects=True) as client:
+    with httpx.Client(timeout=120.0, follow_redirects=True, headers=DEFAULT_HEADERS) as client:
         resp = client.get(url)
         resp.raise_for_status()
         Path(dest).write_bytes(resp.content)
@@ -240,15 +246,24 @@ ARCHIVE_MAX_ITEM_BYTES = 300 * 1024 * 1024  # 300 MB cap per item
 
 
 def _search_archive_hindi_text_items(limit_items: int) -> list[tuple[str, str]]:
-    """Return list of (identifier, jp2_zip_url) for Hindi text items."""
+    """Return list of (identifier, jp2_zip_url) for Hindi text items.
+
+    Filters on collection:americana -- Internet Archive's canonical scanned-book
+    digitization collection. Plain `language:hin AND mediatype:texts` returns
+    mostly Indian-gazette uploads whose `_jp2.zip` derivatives have been taken
+    down (every one 404s). The stricter `format:"Single Page Processed JP2 ZIP"`
+    filter is also insufficient -- the metadata field persists after derivatives
+    are deleted. `collection:americana` items are all scanned by archive.org
+    itself and their derivatives remain live (~108 total hi items available).
+    """
     params = {
-        "q": "language:hin AND mediatype:texts",
+        "q": "language:hin AND mediatype:texts AND collection:americana",
         "fl[]": ["identifier"],
         "rows": limit_items,
         "page": 1,
         "output": "json",
     }
-    with httpx.Client(timeout=60.0) as client:
+    with httpx.Client(timeout=60.0, headers=DEFAULT_HEADERS) as client:
         resp = client.get(ARCHIVE_SEARCH_URL, params=params)
         resp.raise_for_status()
         docs = resp.json().get("response", {}).get("docs", [])
@@ -265,7 +280,7 @@ def _fetch_and_extract_jp2_pages(url: str, max_pages: int) -> list:
     import io
     import zipfile
 
-    with httpx.Client(timeout=600.0, follow_redirects=True) as client:
+    with httpx.Client(timeout=600.0, follow_redirects=True, headers=DEFAULT_HEADERS) as client:
         with client.stream("GET", url) as resp:
             resp.raise_for_status()
             size = int(resp.headers.get("content-length", 0))
@@ -290,7 +305,9 @@ def _fetch_and_extract_jp2_pages(url: str, max_pages: int) -> list:
 def scrape_archive_org(conn: sqlite3.Connection, limit: int, raw_dir: Path) -> None:
     raw_dir.mkdir(parents=True, exist_ok=True)
     items_needed = max(1, limit // 20)
-    items = _search_archive_hindi_text_items(items_needed + 5)
+    # Oversample 2x: even with the format filter some items 404 for transient
+    # reasons (restricted collection, temporarily off-line CDN node, etc).
+    items = _search_archive_hindi_text_items(items_needed * 2 + 5)
     pages_written = 0
     for ident, url in items:
         if pages_written >= limit:
