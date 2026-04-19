@@ -88,9 +88,9 @@ from scripts.training._trackio_logger import TrackioLogger      # noqa: E402
 # Post-mortem revision: depth 6 → 3, LR 3e-4 → 1e-4, pct_start 0.10 → 0.20,
 # label smoothing 0.1 → 0.0, early stopping added. See module docstring.
 CFG = {
-    "batch_size":        96,
+    "batch_size":        320,
     "max_epochs":        40,
-    "max_lr":            1e-4,
+    "max_lr":            2e-4,    # sqrt-scaled for bs=384 (was 1e-4 at bs=96)
     "weight_decay":      0.05,
     "pct_start":         0.20,
     "grad_clip":         1.0,
@@ -104,7 +104,7 @@ CFG = {
     "use_stn":            True,
     "transformer_dim":    256,
     "transformer_heads":  8,
-    "transformer_layers": 3,
+    "transformer_layers": 6,      # restored to v9 design; was 3 post-mortem
     "transformer_ff":     1024,
     "transformer_dropout":0.1,
     # Loss
@@ -112,6 +112,11 @@ CFG = {
     "focal_alpha":        1.0,
     "label_smoothing":    0.0,
 }
+
+# Override default val set with a held-out slice of auto-labeled data so
+# early-stop tracks the domain we actually care about (real printed Hindi),
+# not the synthetic+Mozhi combined/val.
+VAL_LABELS_OVERRIDE = ROOT_DIR / "data/external/auto_labeled/normalized/train_val_labels.txt"
 
 
 # ── L1: Focal CTC + label smoothing ─────────────────────────────────────────
@@ -287,7 +292,7 @@ def main() -> None:
 
     # Datasets (re-uses OCRDatasetV6 augmentation pipeline)
     full_train = OCRDatasetV6(TRAIN_LABELS, vocab, is_training=True)
-    full_val   = OCRDatasetV6(VAL_LABELS,   vocab, is_training=False)
+    full_val   = OCRDatasetV6(VAL_LABELS_OVERRIDE, vocab, is_training=False)
     train_len  = min(CFG["train_subset"], len(full_train))
     val_len    = min(CFG["val_subset"],   len(full_val))
     train_ds   = Subset(full_train, range(train_len))
