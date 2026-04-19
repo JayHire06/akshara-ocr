@@ -283,18 +283,24 @@ def load_vocab(vocab_path: Path) -> set[str]:
 
 def _crop_word(page_path: Path, x: int, y: int, w: int, h: int, out_path: Path, target_h: int = 32) -> None:
     with Image.open(page_path) as im:
-        W, H = im.size
-        x1 = max(x, 0)
-        y1 = max(y, 0)
-        x2 = min(x + w, W)
-        y2 = min(y + h, H)
-        crop = im.crop((x1, y1, x2, y2))
-        if crop.height != target_h:
-            ratio = target_h / max(crop.height, 1)
-            new_w = max(1, int(crop.width * ratio))
-            crop = crop.resize((new_w, target_h))
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        crop.save(out_path, format="PNG")
+        _crop_from_image(im, x, y, w, h, out_path, target_h)
+
+
+def _crop_from_image(
+    im: "Image.Image", x: int, y: int, w: int, h: int, out_path: Path, target_h: int = 32
+) -> None:
+    W, H = im.size
+    x1 = max(x, 0)
+    y1 = max(y, 0)
+    x2 = min(x + w, W)
+    y2 = min(y + h, H)
+    crop = im.crop((x1, y1, x2, y2))
+    if crop.height != target_h:
+        ratio = target_h / max(crop.height, 1)
+        new_w = max(1, int(crop.width * ratio))
+        crop = crop.resize((new_w, target_h))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    crop.save(out_path, format="PNG")
 
 
 def emit_labels_and_crops(
@@ -334,19 +340,41 @@ def emit_labels_and_crops(
     val_lines: list[str] = []
     qa_lines: list[str] = []
 
-    for wid, pid, x, y, w, h, text, _src in kept_rows:
-        out = crops_dir / f"{wid}.png"
-        _crop_word(Path(page_paths[pid]), x, y, w, h, out)
-        line = f"{out}|{text}"
-        if wid in val_pick:
-            val_lines.append(line)
-        else:
-            train_lines.append(line)
+    # Keep at most one decoded page image resident at a time. Rows are ordered
+    # by w.id which mirrors page-insertion order from the labeler, so consecutive
+    # rows almost always share pid -- a single-slot cache hits ~100%.
+    cur_pid: int | None = None
+    cur_img: "Image.Image | None" = None
 
-    for wid, pid, x, y, w, h, text, _src in qa_rows:
-        out = crops_dir / f"{wid}.png"
-        _crop_word(Path(page_paths[pid]), x, y, w, h, out)
-        qa_lines.append(f"{out}|{text}|{wid}")
+    def _ensure_page(pid: int) -> "Image.Image":
+        nonlocal cur_pid, cur_img
+        if pid != cur_pid:
+            if cur_img is not None:
+                cur_img.close()
+            new_img = Image.open(page_paths[pid])
+            new_img.load()
+            cur_img = new_img
+            cur_pid = pid
+        assert cur_img is not None
+        return cur_img
+
+    try:
+        for wid, pid, x, y, w, h, text, _src in kept_rows:
+            out = crops_dir / f"{wid}.png"
+            _crop_from_image(_ensure_page(pid), x, y, w, h, out)
+            line = f"{out}|{text}"
+            if wid in val_pick:
+                val_lines.append(line)
+            else:
+                train_lines.append(line)
+
+        for wid, pid, x, y, w, h, text, _src in qa_rows:
+            out = crops_dir / f"{wid}.png"
+            _crop_from_image(_ensure_page(pid), x, y, w, h, out)
+            qa_lines.append(f"{out}|{text}|{wid}")
+    finally:
+        if cur_img is not None:
+            cur_img.close()
 
     from scripts.data.auto_labeled_common import atomic_write_text
     atomic_write_text(normalized_dir / "train_labels.txt", "\n".join(train_lines) + ("\n" if train_lines else ""))
