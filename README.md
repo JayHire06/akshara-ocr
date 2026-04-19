@@ -7,7 +7,7 @@
 Akshara OCR is a high-performance, **native-first** Optical Character Recognition platform designed specifically for Devanagari (Hindi) script. All inference runs entirely on-device — no server round-trips, no telemetry, no uploads.
 
 > [!IMPORTANT]
-> **v8 → v9 transition in progress.** v8 (staged curriculum, CRNNv6 + MobileNet + BiLSTM) is shipping. v9 (CRNNv9 with a 6-layer Transformer encoder + EMA weights + label smoothing) is scaffolded and ready to train against the new text-disjoint split. See [docs/v9-design.md](docs/v9-design.md).
+> **v9 trained and deployed.** CRNNv9 (6-layer Transformer encoder + EMA + label smoothing) has been trained on the merged combined + auto-labeled corpus (233K train rows). Latest run `run_v9_20260420_011555` measures CER 10.90% / WER 31.62% on the new `verified_test_labels.txt` benchmark — down from the pre-auto v9 baseline of 57.02% / 96.39%. The post-mortem-cut `transformer_layers=3` has been restored to 6 now that the larger corpus removes the earlier overfitting risk. See [docs/v9-design.md](docs/v9-design.md).
 
 ## Key Features
 
@@ -19,17 +19,19 @@ Akshara OCR is a high-performance, **native-first** Optical Character Recognitio
 
 ## Model generations
 
-| Version | Architecture | Notes |
-|---|---|---|
-| v1 | CRNN (block + linear) | Baseline from scratch |
-| v2 | CRNN + early augmentation | Fine-tunes from v1 |
-| v3 | CRNN, 200K extended pool | Vocab expansion |
-| v4 | CRNN, realistic handcrafted documents | |
-| v5 | CRNN, production candidate | OneCycleLR + AMP |
-| v6 | CRNNv6 (STN + MobileNet + BiLSTM) | Edge-friendly |
-| v7 | CRNNv6 + NLP spell-beam reranker | v6 inference + language prior |
-| v8 | CRNNv6, staged curriculum | Synth → printed real → handwritten real |
-| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing | In development — see [v9 design doc](docs/v9-design.md) |
+| Version | Architecture | Notes | Measured CER (combined/val) |
+|---|---|---|---|
+| v1 | CRNN (block + linear) | Baseline from scratch | 96.59%† |
+| v2 | CRNN + early augmentation | Fine-tunes from v1 | 3.00% |
+| v3 | CRNN, 200K extended pool | Vocab expansion | 96.66%† |
+| v4 | CRNN, realistic handcrafted documents | | 96.46%† |
+| v5 | CRNN, production candidate | OneCycleLR + AMP | 4.82% |
+| v6 | CRNNv6 (STN + MobileNet + BiLSTM) | Edge-friendly | 8.66% |
+| v7 | CRNNv6 + NLP spell-beam reranker | v6 inference + language prior | 8.90% |
+| v8 | CRNNv6, staged curriculum | Synth → printed real → handwritten real | 27.99% |
+| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing, trained on combined + auto-labeled (233K) | Current production — see [v9 design doc](docs/v9-design.md) | **2.23%** (vs auto-labeled val) / **10.90%** (vs verified_test_labels) |
+
+† v1/v3/v4 decode under the current 70-char master vocab; their checkpoints were trained against a vocab layout we no longer have on disk, so these numbers reflect vocab-mismatch decoding, not true capability. See `scripts/devtool/backfill_trackio.py` commit for details.
 
 ## Quickstart — run the frontend
 
@@ -91,16 +93,47 @@ The evaluator is now **loud-by-default**: any checkpoint whose state dict loads 
 
 `docs/v9-design.md` is the authoritative spec. Short version:
 
-- `model/crnn_v9.py` — `CRNNv9` class (STN + MobileNet CNN + 6-layer Transformer encoder + CTC head) and `ExponentialMovingAverage` helper.
-- `scripts/training/train_v9.py` — training loop with AdamW, OneCycleLR, focal CTC + label smoothing, EMA weights, character-frequency weighted sampler.
+- `model/crnn_v9.py` — `CRNNv9` class (STN + MobileNet CNN + Transformer encoder + CTC head) and `ExponentialMovingAverage` helper.
+- `scripts/training/train_v9.py` — training loop with AdamW, OneCycleLR, focal CTC + label smoothing, EMA weights, uniform shuffle (char-frequency sampler removed in post-mortem).
 
-To train v9 against the text-disjoint split:
+The current live config (after the auto-labeled corpus merge):
+- `batch_size=320`, `max_lr=2e-4` (sqrt-scaled for the larger batch).
+- `transformer_layers=6` (restored from the post-mortem cut of 3, now that 233K train rows remove the overfitting pressure).
+- `VAL_LABELS_OVERRIDE` points at a held-out slice of `data/external/auto_labeled/normalized/val_labels.txt` so early-stop tracks the real-world printed-Hindi domain, not the synthetic + Mozhi combined val.
+
+To train v9:
 
 ```bash
-python scripts/training/train_v9.py
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+PYTHONPATH=$(pwd) ./venv/bin/python scripts/training/train_v9.py
 ```
 
-Checkpoints land in `model/checkpoints_v9/run_v9_<timestamp>/best_v9.pth`.
+Checkpoints land in `model/checkpoints_v9/run_v9_<timestamp>/best_v9.pth`. Per-epoch metrics stream to `run_dir/metrics.jsonl` and live to the Trackio project `akshara-ocr`.
+
+### 5a. Auto-labeled external data pipeline
+
+A separate pipeline scrapes printed Hindi from public-domain sources (Wikipedia, Wikisource, archive.org), pseudo-labels via Azure Document Intelligence, and produces both training crops and a human-verifiable test split. See [data/external/auto_labeled/README.md](data/external/auto_labeled/README.md). The latest production run published:
+
+- 150,581 train rows + 16,730 val rows (via `data/v8/stages/stage_auto_labeled_printed/`).
+- 1,164-row `verified_test_labels.txt` (Azure conf ≥ 0.95), SHA256-pinned in `manifests/manifest.json`.
+- Total Azure spend: ~$0.72 across 481 labeled pages.
+
+### 5b. Inference dev tool
+
+`scripts/devtool/inference_ui.py` serves a localhost FastAPI page for uploading images and testing any discovered checkpoint. It now does both horizontal line segmentation and in-line vertical word segmentation, so multi-word sentence images produce space-separated output (the model itself is word-level with no space token — spaces are inserted by the pipeline).
+
+```bash
+PYTHONPATH=$(pwd) ./venv/bin/python -m scripts.devtool.inference_ui --port 7000
+```
+
+### 5c. Trackio dashboard (historical + live)
+
+`scripts/devtool/backfill_trackio.py` walks every discovered `bestVN.pth` checkpoint, publishes measured CER/WER on `data/combined/val_labels.txt`, and replays any per-epoch `metrics.jsonl` that survived alongside a run directory. Run once to populate the dashboard with v1–v8 alongside live v9 runs:
+
+```bash
+PYTHONPATH=$(pwd) ./venv/bin/python -m scripts.devtool.backfill_trackio
+trackio show --project "akshara-ocr"
+```
 
 ### 6. Git LFS
 

@@ -7,10 +7,10 @@ All architectures live here. Training scripts in `scripts/training/` must import
 | File | Contents |
 |---|---|
 | `crnn.py` | `CRNN` (block + linear, used by v1–v5), `STN`, `MobileNetBlock`, `CRNNv6` (STN + depthwise CNN + BiLSTM, used by v6–v8) |
-| `crnn_v9.py` | `CRNNv9` (STN + depthwise CNN + 6-layer Transformer encoder), `ExponentialMovingAverage` helper |
-| `ctc_decoder.py` | Greedy best-path decoder shared by all architectures |
+| `crnn_v9.py` | `CRNNv9` (STN + depthwise CNN + Transformer encoder), `ExponentialMovingAverage` helper |
+| `ctc_decoder.py` | `CTCDecoder.decode_best_path` (greedy) and `decode_prefix_beam` (proper Graves-2006 CTC prefix beam search in log space with blank/non-blank prefix split and prefix merging). Legacy `decode_beam_search` retained for backwards compat but not recommended. |
 | `loss.py` | `FocalCTCLoss` (γ, α) used by v6+ training scripts |
-| `benchmark_eval.py` | `_load_model`, `CheckpointLoadError`, `evaluate_checkpoint_on_labels`, `discover_default_checkpoints` |
+| `benchmark_eval.py` | `_load_model`, `CheckpointLoadError`, `evaluate_checkpoint_on_labels`, `discover_default_checkpoints`, `calculate_cer`, `calculate_wer` |
 
 ## Architecture map
 
@@ -37,10 +37,15 @@ See [`docs/v9-design.md`](../docs/v9-design.md) for full rationale.
 - STN: same 6-parameter affine as CRNNv6
 - CNN: 5 × `MobileNetBlock` → 512-channel features, height collapsed to 1
 - Projection: `Linear(512 → 256)` + sinusoidal positional encoding
-- Sequence model: 6 × `nn.TransformerEncoderLayer(d_model=256, nhead=8, d_ff=1024, gelu, pre-norm)`
+- Sequence model: `N × nn.TransformerEncoderLayer(d_model=256, nhead=8, d_ff=1024, gelu, pre-norm)` — `N` controlled by `transformer_layers` in the training config
 - Head: `LayerNorm → Linear(256 → vocab)`
 - Output: `log_softmax(dim=2)` — CTC-ready `(T, B, V)`
-- Parameters: ~5.87M (target ~6.5M)
+- Parameters: ~3.51M at `N=3`, ~5.88M at `N=6`.
+
+Training history on `N`:
+- Initial design: N=6. First production run at N=6 overfit on the 83K-row pre-auto corpus.
+- Post-mortem revision: cut to N=3 + early stopping.
+- **Current (post-auto-labeled merge, 233K rows):** restored to N=6. Vocab expanded 52 → 70 chars (`data/combined/vocab.json` now mirrors the master `data/vocab.json`). Best checkpoint `run_v9_20260420_011555/best_v9.pth` measures CER 1.99% on held-out auto-labeled val, 10.90% on `verified_test_labels.txt`.
 
 ## Loud loading — CheckpointLoadError
 

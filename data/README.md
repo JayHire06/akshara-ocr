@@ -4,20 +4,24 @@
 
 ```
 data/
-├── combined/                    # v1–v8 training pool (85K train, 15K val)
-│   ├── train/images/            # source images
+├── combined/                         # v1–v8 training pool, merged with auto-labeled for v9
+│   ├── train/images/                 # source images
 │   ├── val/images/
-│   ├── train_labels.txt         # <abs_image_path>|<target_text>
-│   ├── val_labels.txt
-│   ├── vocab.json               # char → idx, index 0 = <blank>
-│   └── *.leaky.bak              # archived pre-rebuild split (if present)
-├── v8/stages/                   # v8 staged curriculum sources
+│   ├── train_labels.txt              # 233,901 rows after auto-labeled merge (83K pre-merge)
+│   ├── train_labels.pre_auto.bak     # 83K-row snapshot taken before the auto-labeled append
+│   ├── val_labels.txt                # 16,680 rows — unchanged; auto-labeled val is held separately
+│   ├── vocab.json                    # char → idx, index 0 = <blank>. Now 70 entries (was 52 pre-merge).
+│   ├── vocab.pre_auto.bak.json       # 52-char snapshot used by the backfill to decode old checkpoints
+│   └── *.leaky.bak                   # archived pre-rebuild split (if present)
+├── v8/stages/                        # v8 staged curriculum sources
 │   ├── stage1_base_iiit_synth_r/
 │   ├── stage2_printed_real_mozhi/
-│   └── stage3_handwritten_real_iiit_hw_words/
-├── benchmarks/                  # named suites (synthetic_only, real_only, ...)
+│   ├── stage3_handwritten_real_iiit_hw_words/
+│   └── stage_auto_labeled_printed/   # v9 addition: pointer to normalized auto-labeled labels
+├── external/auto_labeled/            # scrape → OCR → filter → verify pipeline output (see its README)
+├── benchmarks/                       # named suites (synthetic_only, real_only, ...)
 │   └── manifest.json
-└── dataset.py                   # OCRDataset, OCRDatasetV6 (albumentations)
+└── dataset.py                        # OCRDataset, OCRDatasetV6 (albumentations)
 ```
 
 ## Text-disjoint split
@@ -50,7 +54,18 @@ All variants return `(tensor, target_indices, raw_label)` and use the shared `vo
 
 ## Vocab
 
-`data/combined/vocab.json` and root `vocab.json` are identical — 52 entries, index 0 is `<blank>`. The canonical copy is `data/combined/vocab.json`; the root copy is kept for frontend ONNX inference.
+Two vocabularies exist and must stay aligned with the checkpoint's output-head size:
+
+| Path | Size | Used by |
+|---|---|---|
+| `data/combined/vocab.json` (current) | **70 entries** (69 chars + `<blank>`) | v9 retrained after the auto-labeled merge |
+| `data/combined/vocab.pre_auto.bak.json` | 52 entries | Pre-merge checkpoints (v1–v8). Preserved for evaluating legacy runs. |
+| `./vocab.json` (repo root) | 52 entries | Frontend ONNX inference (not yet updated for the 70-char vocab). |
+| `data/vocab.json` | 70 entries | Master vocab used by the auto-labeled OCR filter's OOV check. |
+
+The jump from 52 → 70 was driven by rare chars present in the auto-labeled data that were silently dropped under the old vocab (including `ः`, `ऋ`, `ऐ`, `ऑ`, `ओ`, `औ`, `घ`, `ङ`, `झ`, `ढ`, `ॅ`, `ॉ`, `ॐ`, `ड़`, `ढ़`, and the Devanagari digits `१`, `२`, `६`, `८`). The old vocab had space ` ` as an entry; the new master vocab removes it (the model is word-level; spaces are reinserted by the inference pipeline's word segmenter, not emitted by the model).
+
+When decoding a historical checkpoint, `scripts/devtool/backfill_trackio.py` picks the matching vocab file by output-head size. Mixing a 52-output checkpoint with the 70-char vocab produces garbage decodes.
 
 ## Benchmark suites
 
