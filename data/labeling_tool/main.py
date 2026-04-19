@@ -26,6 +26,16 @@ _LEGACY_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
 app.mount("/images", StaticFiles(directory=str(_LEGACY_IMAGES_DIR)), name="images")
 
+# QA crops are produced by scripts/data/filter_and_crop_words.py into the
+# normalized/crops directory — a different location from the legacy
+# images_to_label used by the manual labeling flow. Mounted separately so
+# the /qa template can reference /qa/crops/<wid>.png without colliding.
+_QA_CROPS_DIR = Path(
+    os.environ.get("AUTO_LABELED_NORMALIZED_DIR", "data/external/auto_labeled/normalized")
+).resolve() / "crops"
+_QA_CROPS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/qa/crops", StaticFiles(directory=str(_QA_CROPS_DIR)), name="qa_crops")
+
 
 def _legacy_unlabeled() -> list[str]:
     import csv
