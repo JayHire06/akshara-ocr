@@ -34,7 +34,8 @@ Filter pass yielded:
 - All four disjointness audits: **0**
 
 After human QA (bulk-accepted all Azure confidence ≥ 0.95 candidates, rejected the rest):
-- `verified_test_labels.txt`: **1,164 rows** (776 kept / 388 rejected split). SHA256 `efbd289419dd3122a602d238b20c7da0cb043984de79c200ca0054f8f542b493`.
+- Of the 1,500 QA candidates: **1,164 accepted** (≥ 0.95 conf) and 336 rejected.
+- `verified_test_labels.txt`: **1,164 rows**. SHA256 `efbd289419dd3122a602d238b20c7da0cb043984de79c200ca0054f8f542b493`.
 
 Azure Document Intelligence cost: ~$0.72 total. The pipeline smoke at `--source wikipedia --limit 5 --provider azure` costs ~$0.01.
 
