@@ -1,6 +1,15 @@
 # Benchmark Suites
 
 > [!IMPORTANT]
+> **Current cross-version numbers** live in [`benchmark-matrix.md`](./benchmark-matrix.md) (and machine-readable form in [`benchmark-matrix.json`](./benchmark-matrix.json)). Regenerate with:
+>
+> ```bash
+> ./venv/bin/python -m scripts.devtool.benchmark_matrix --md-out docs/benchmark-matrix.md
+> ```
+>
+> The matrix reports CER, WER, exact-match, and empty-prediction rate for every `v1` through `v9` checkpoint across three benchmarks — `combined_val` (16,680 rows, the historical text-disjoint val), `verified_test` (1,164 rows, the auto-labeled Azure-conf-≥-0.95 split), and `auto_labeled_heldout_val` (8,365 rows, the in-domain held-out slice). It also records the checkpoint path, output-head vocab size, and parameter count per version so vocab-mismatch artefacts (v1/v3/v4 decoding under the wrong vocab) are explicit rather than silent.
+
+> [!IMPORTANT]
 > **Text-disjoint split (required).** The original `data/combined` split had ~80% text-level leakage between train and val — near-zero CER numbers on early models were memorization. The split is now rebuilt so no target string appears in both train and val. Run `python scripts/data/rebuild_text_disjoint_split.py` if the current split still contains the leaky partition (look for `*.leaky.bak` files as the tell).
 
 > [!IMPORTANT]

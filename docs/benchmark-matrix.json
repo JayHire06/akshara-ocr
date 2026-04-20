@@ -1,0 +1,313 @@
+{
+  "generated_at": "2026-04-20T03:51:20Z",
+  "device": "cuda",
+  "benchmarks": {
+    "combined_val": {
+      "path": "data/combined/val_labels.txt",
+      "rows": 16680,
+      "desc": "Text-disjoint combined val — the canonical historical benchmark."
+    },
+    "verified_test": {
+      "path": "data/external/auto_labeled/normalized/verified_test_labels.txt",
+      "rows": 1164,
+      "desc": "Auto-labeled confidence-gated test split (Azure conf ≥ 0.95)."
+    },
+    "auto_labeled_heldout_val": {
+      "path": "data/external/auto_labeled/normalized/held_out_val_labels.txt",
+      "rows": 8365,
+      "desc": "Held-out half of the auto-labeled val split (never used for training or QA gating)."
+    }
+  },
+  "arch": {
+    "v1 (Base Gen.)": {
+      "checkpoint": "model/checkpoints_v1/checkpoint_epoch_5.pth",
+      "vocab_size": 53,
+      "params_M": 5.32,
+      "status": "OK"
+    },
+    "v2 (Early Aug.)": {
+      "checkpoint": "model/checkpoints_v2/best_model_v2.pth",
+      "vocab_size": 52,
+      "params_M": 5.32,
+      "status": "OK"
+    },
+    "v3 (200K Extended)": {
+      "checkpoint": "model/checkpoints_200k/checkpoint_epoch_8.pth",
+      "vocab_size": 53,
+      "params_M": 5.32,
+      "status": "OK"
+    },
+    "v4 (Realistic)": {
+      "checkpoint": "model/checkpoints_realistic_v2/checkpoint_epoch_9.pth",
+      "vocab_size": 53,
+      "params_M": 5.32,
+      "status": "OK"
+    },
+    "v5 (Current Prod)": {
+      "checkpoint": "model/checkpoints/run_v5_20260413_210231/best.pth",
+      "vocab_size": 52,
+      "params_M": 5.32,
+      "status": "OK"
+    },
+    "v6 (Edge STN)": {
+      "checkpoint": "model/checkpoints_v6_edge/run_v6_20260414_015709/best_v6.pth",
+      "vocab_size": 52,
+      "params_M": 4.17,
+      "status": "OK"
+    },
+    "v7 (NLP-Guided)": {
+      "checkpoint": "model/checkpoints_v7_nlp/run_v7_20260414_021915/best_v7.pth",
+      "vocab_size": 52,
+      "params_M": 4.17,
+      "status": "OK"
+    },
+    "v8 (Staged Curriculum)": {
+      "checkpoint": "model/checkpoints_v8/run_v8_20260413_154830/best_v8.pth",
+      "vocab_size": 52,
+      "params_M": 4.17,
+      "status": "OK"
+    },
+    "v9 (Transformer)": {
+      "checkpoint": "model/checkpoints_v9/run_v9_20260420_011555/best_v9.pth",
+      "vocab_size": 70,
+      "params_M": 5.88,
+      "status": "OK"
+    }
+  },
+  "grid": {
+    "v1 (Base Gen.)": {
+      "combined_val": {
+        "cer_pct": 96.592,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1369.7
+      },
+      "verified_test": {
+        "cer_pct": 98.73,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 1673.0
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 99.02,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.048,
+        "samples": 8365,
+        "samples_per_sec": 1703.1
+      }
+    },
+    "v2 (Early Aug.)": {
+      "combined_val": {
+        "cer_pct": 2.996,
+        "wer_pct": 13.121,
+        "exact_pct": 69.125,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1447.5
+      },
+      "verified_test": {
+        "cer_pct": 44.726,
+        "wer_pct": 91.838,
+        "exact_pct": 8.162,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 2405.0
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 43.415,
+        "wer_pct": 78.924,
+        "exact_pct": 21.076,
+        "empty_pct": 0.108,
+        "samples": 8365,
+        "samples_per_sec": 2504.4
+      }
+    },
+    "v3 (200K Extended)": {
+      "combined_val": {
+        "cer_pct": 96.66,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1432.4
+      },
+      "verified_test": {
+        "cer_pct": 98.687,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 2356.3
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 98.911,
+        "wer_pct": 99.976,
+        "exact_pct": 0.024,
+        "empty_pct": 0.0,
+        "samples": 8365,
+        "samples_per_sec": 2275.6
+      }
+    },
+    "v4 (Realistic)": {
+      "combined_val": {
+        "cer_pct": 96.46,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1249.8
+      },
+      "verified_test": {
+        "cer_pct": 98.777,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.086,
+        "samples": 1164,
+        "samples_per_sec": 2690.6
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 98.937,
+        "wer_pct": 100.0,
+        "exact_pct": 0.0,
+        "empty_pct": 0.024,
+        "samples": 8365,
+        "samples_per_sec": 2150.9
+      }
+    },
+    "v5 (Current Prod)": {
+      "combined_val": {
+        "cer_pct": 4.821,
+        "wer_pct": 16.676,
+        "exact_pct": 67.716,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1362.6
+      },
+      "verified_test": {
+        "cer_pct": 43.718,
+        "wer_pct": 88.23,
+        "exact_pct": 11.77,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 2260.8
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 40.298,
+        "wer_pct": 76.449,
+        "exact_pct": 23.551,
+        "empty_pct": 0.251,
+        "samples": 8365,
+        "samples_per_sec": 2454.4
+      }
+    },
+    "v6 (Edge STN)": {
+      "combined_val": {
+        "cer_pct": 8.663,
+        "wer_pct": 19.368,
+        "exact_pct": 68.903,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1458.0
+      },
+      "verified_test": {
+        "cer_pct": 64.909,
+        "wer_pct": 98.454,
+        "exact_pct": 1.546,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 415.4
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 61.246,
+        "wer_pct": 91.632,
+        "exact_pct": 8.368,
+        "empty_pct": 0.0,
+        "samples": 8365,
+        "samples_per_sec": 873.6
+      }
+    },
+    "v7 (NLP-Guided)": {
+      "combined_val": {
+        "cer_pct": 8.898,
+        "wer_pct": 20.049,
+        "exact_pct": 68.873,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1615.1
+      },
+      "verified_test": {
+        "cer_pct": 64.579,
+        "wer_pct": 98.883,
+        "exact_pct": 1.117,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 2782.3
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 61.604,
+        "wer_pct": 92.779,
+        "exact_pct": 7.221,
+        "empty_pct": 0.0,
+        "samples": 8365,
+        "samples_per_sec": 2648.7
+      }
+    },
+    "v8 (Staged Curriculum)": {
+      "combined_val": {
+        "cer_pct": 27.991,
+        "wer_pct": 81.193,
+        "exact_pct": 18.807,
+        "empty_pct": 0.216,
+        "samples": 16680,
+        "samples_per_sec": 1537.5
+      },
+      "verified_test": {
+        "cer_pct": 16.237,
+        "wer_pct": 50.258,
+        "exact_pct": 49.742,
+        "empty_pct": 0.086,
+        "samples": 1164,
+        "samples_per_sec": 2425.5
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 16.897,
+        "wer_pct": 40.012,
+        "exact_pct": 59.988,
+        "empty_pct": 1.578,
+        "samples": 8365,
+        "samples_per_sec": 2817.7
+      }
+    },
+    "v9 (Transformer)": {
+      "combined_val": {
+        "cer_pct": 8.018,
+        "wer_pct": 58.028,
+        "exact_pct": 41.972,
+        "empty_pct": 0.0,
+        "samples": 16680,
+        "samples_per_sec": 1197.7
+      },
+      "verified_test": {
+        "cer_pct": 10.905,
+        "wer_pct": 31.615,
+        "exact_pct": 68.385,
+        "empty_pct": 0.0,
+        "samples": 1164,
+        "samples_per_sec": 2361.2
+      },
+      "auto_labeled_heldout_val": {
+        "cer_pct": 2.239,
+        "wer_pct": 6.79,
+        "exact_pct": 93.21,
+        "empty_pct": 0.0,
+        "samples": 8365,
+        "samples_per_sec": 2357.6
+      }
+    }
+  }
+}

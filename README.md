@@ -19,19 +19,23 @@ Akshara OCR is a high-performance, **native-first** Optical Character Recognitio
 
 ## Model generations
 
-| Version | Architecture | Notes | Measured CER (combined/val) |
-|---|---|---|---|
-| v1 | CRNN (block + linear) | Baseline from scratch | 96.59%† |
-| v2 | CRNN + early augmentation | Fine-tunes from v1 | 3.00% |
-| v3 | CRNN, 200K extended pool | Vocab expansion | 96.66%† |
-| v4 | CRNN, realistic handcrafted documents | | 96.46%† |
-| v5 | CRNN, production candidate | OneCycleLR + AMP | 4.82% |
-| v6 | CRNNv6 (STN + MobileNet + BiLSTM) | Edge-friendly | 8.66% |
-| v7 | CRNNv6 + NLP spell-beam reranker | v6 inference + language prior | 8.90% |
-| v8 | CRNNv6, staged curriculum | Synth → printed real → handwritten real | 27.99% |
-| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing, trained on combined + auto-labeled (233K) | **Final build for this phase** — deployed as `frontend/public/model.onnx`. See [v9 design doc](docs/v9-design.md). | **2.23%** (vs auto-labeled val) / **10.90%** (vs verified_test_labels) |
+CER measured across three benchmarks (lower is better). Full grid with WER, exact-match, and empty-prediction rate is in [`docs/benchmark-matrix.md`](docs/benchmark-matrix.md) (regenerate with `./venv/bin/python -m scripts.devtool.benchmark_matrix`).
 
-† v1/v3/v4 decode under the current 70-char master vocab; their checkpoints were trained against a vocab layout we no longer have on disk, so these numbers reflect vocab-mismatch decoding, not true capability. See `scripts/devtool/backfill_trackio.py` commit for details.
+| Version | Architecture | combined_val | verified_test | auto_labeled_heldout_val |
+|---|---|---:|---:|---:|
+| v1 | CRNN (block + linear) — baseline | 96.59%† | 98.73%† | 99.02%† |
+| v2 | CRNN + early augmentation | 3.00% | 44.73% | 43.41% |
+| v3 | CRNN, 200K extended pool | 96.66%† | 98.69%† | 98.91%† |
+| v4 | CRNN, realistic handcrafted documents | 96.46%† | 98.78%† | 98.94%† |
+| v5 | CRNN, production candidate (OneCycleLR + AMP) | 4.82% | 43.72% | 40.30% |
+| v6 | CRNNv6 (STN + MobileNet + BiLSTM) | 8.66% | 64.91% | 61.25% |
+| v7 | CRNNv6 + NLP spell-beam reranker | 8.90% | 64.58% | 61.60% |
+| v8 | CRNNv6, staged curriculum (synth → printed → handwritten) | 27.99% | 16.24% | 16.90% |
+| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing, trained on combined + auto-labeled (233K). **Final build for this phase** — deployed as `frontend/public/model.onnx`. See [v9 design doc](docs/v9-design.md). | **8.02%** | **10.90%** | **2.24%** |
+
+† v1/v3/v4 decode under a vocab layout that no longer exists on disk; their CER/WER numbers are vocab-mismatch artefacts, not true capability. See `scripts/devtool/backfill_trackio.py` commit for details.
+
+**Reading the grid.** `combined_val` is the original text-disjoint synthetic+Mozhi val — it's what v1–v7 were optimised against, so those scores reflect in-distribution performance. `verified_test` and `auto_labeled_heldout_val` are new benchmarks drawn from real-world printed Hindi (Wikipedia / Wikisource / archive.org); they're the honest generalisation test. v9 is the only version that wins on all three.
 
 ## Quickstart — run the frontend
 
