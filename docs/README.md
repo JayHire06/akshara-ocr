@@ -2,7 +2,7 @@
 
 ## Model & training
 
-- **[v9 Design — "The Honest Leap"](./v9-design.md)** — Transformer encoder, EMA, label smoothing, text-disjoint methodology, Fast-Track stack. v9 is now trained and in production; see the root README for current CER/WER numbers.
+- **[v9 Design — "The Honest Leap"](./v9-design.md)** — Transformer encoder, EMA, label smoothing, text-disjoint methodology, Fast-Track stack. **v9 is the final build of this project for this phase** — trained, benchmarked, and deployed as the production ONNX the frontend loads. See the root README and the v9 design doc's "Shipped results" block for measured numbers.
 - [v8 Data Preparation Plan](./v8-data-preparation-plan.md) — Staged curriculum sources and size targets.
 - [External Auto-Labeled Data Design](./superpowers/specs/2026-04-16-external-auto-labeled-data-design.md) — Scrape → cloud-OCR → filter → human-verified QA pipeline that drives the 150K-row auto-labeled training stage and the `verified_test_labels.txt` benchmark. See also [data/external/auto_labeled/README.md](../data/external/auto_labeled/README.md) for the production run's numbers.
 

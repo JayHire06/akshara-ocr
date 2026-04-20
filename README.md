@@ -7,7 +7,7 @@
 Akshara OCR is a high-performance, **native-first** Optical Character Recognition platform designed specifically for Devanagari (Hindi) script. All inference runs entirely on-device — no server round-trips, no telemetry, no uploads.
 
 > [!IMPORTANT]
-> **v9 trained and deployed.** CRNNv9 (6-layer Transformer encoder + EMA + label smoothing) has been trained on the merged combined + auto-labeled corpus (233K train rows). Latest run `run_v9_20260420_011555` measures CER 10.90% / WER 31.62% on the new `verified_test_labels.txt` benchmark — down from the pre-auto v9 baseline of 57.02% / 96.39%. The post-mortem-cut `transformer_layers=3` has been restored to 6 now that the larger corpus removes the earlier overfitting risk. See [docs/v9-design.md](docs/v9-design.md).
+> **v9 is the final build of this project for this phase.** CRNNv9 (STN + MobileNet + 6-layer Transformer encoder + EMA + label smoothing) is trained on the merged combined + auto-labeled corpus (233K train rows), exported to ONNX, and deployed as the production model the frontend loads. Production checkpoint: `model/checkpoints_v9/run_v9_20260420_011555/best_v9.pth`. Benchmarks: **CER 10.90% / WER 31.62%** on the new `verified_test_labels.txt` (1,164 rows), **CER 2.24% / WER 6.79%** on the in-domain auto-labeled held-out val. Deferred next-phase work (KenLM language-model beam rescoring, encoder-decoder architecture, conjunct BPE tokenizer) is documented in [docs/v9-design.md](docs/v9-design.md) but not part of this shipped build.
 
 ## Key Features
 
@@ -29,7 +29,7 @@ Akshara OCR is a high-performance, **native-first** Optical Character Recognitio
 | v6 | CRNNv6 (STN + MobileNet + BiLSTM) | Edge-friendly | 8.66% |
 | v7 | CRNNv6 + NLP spell-beam reranker | v6 inference + language prior | 8.90% |
 | v8 | CRNNv6, staged curriculum | Synth → printed real → handwritten real | 27.99% |
-| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing, trained on combined + auto-labeled (233K) | Current production — see [v9 design doc](docs/v9-design.md) | **2.23%** (vs auto-labeled val) / **10.90%** (vs verified_test_labels) |
+| **v9** | **CRNNv9** (STN + MobileNet + 6-layer Transformer encoder) + EMA + label smoothing, trained on combined + auto-labeled (233K) | **Final build for this phase** — deployed as `frontend/public/model.onnx`. See [v9 design doc](docs/v9-design.md). | **2.23%** (vs auto-labeled val) / **10.90%** (vs verified_test_labels) |
 
 † v1/v3/v4 decode under the current 70-char master vocab; their checkpoints were trained against a vocab layout we no longer have on disk, so these numbers reflect vocab-mismatch decoding, not true capability. See `scripts/devtool/backfill_trackio.py` commit for details.
 

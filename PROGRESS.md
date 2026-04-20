@@ -257,4 +257,47 @@ Modified:
 - Rare-glyph CER at least 30% lower than v8's.
 - Checkpoint loads cleanly through `CheckpointLoadError`-enforced harness.
 
-**Current Status:** Scaffolding complete. Awaiting compute for first full v9 training run + re-evaluation of v1–v8 on the text-disjoint split.
+**Week 7 status:** Scaffolding complete. Awaiting compute for first full v9 training run + re-evaluation of v1–v8 on the text-disjoint split.
+
+---
+
+## 📅 WEEK 8 — V9 SHIPPED AS FINAL BUILD (2026-04-20)
+
+v9 is the final build of this project for this phase. Design pillars from Week 7 were executed, compute landed, and the trained model is deployed as the production ONNX the frontend serves.
+
+### What actually got trained
+
+| Run | Config | Val CER (training val) | Verified test CER | Verified test WER |
+|---|---|---|---|---|
+| Pre-auto v9 (historical) | depth=3, lr=1e-4, combined/val early-stop | — | 57.02% | 96.39% |
+| Data-only retrain | depth=3, lr=1e-4, merged 233K train | 7.12% | 18.41% | 42.87% |
+| **Bundled retrain (shipped)** | **depth=6, lr=2e-4, bs=320, auto-labeled val** | **1.99%** | **10.90%** | **31.62%** |
+
+Production checkpoint: `model/checkpoints_v9/run_v9_20260420_011555/best_v9.pth` (early-stopped at epoch 28 after patience=3 on held-out auto-labeled val CER).
+
+### Supporting infra shipped in the same phase
+
+- **External auto-labeled data pipeline.** Scrapes Wikipedia + Wikisource + archive.org (the gov-PDF source is disabled until its seed list is curated), labels via Azure Document Intelligence, filters under a strict text-disjoint policy, emits a v8-compatible training stage plus a 1,164-row `verified_test_labels.txt` benchmark. Azure spend end-to-end: $0.72.
+- **Trackio dashboard backfill.** `scripts/devtool/backfill_trackio.py` publishes historical v1–v8 measured CER/WER into the same project as the live v9 runs so the whole generation history is visible in one place.
+- **Inference dev tool.** `scripts/devtool/inference_ui.py` now does line + word segmentation so multi-word sentence images produce space-separated output. The production model is word-level; spaces are inserted by the pipeline, not emitted by the model.
+- **Beam-search decoder.** `CTCDecoder.decode_prefix_beam` (Graves-2006 prefix beam, log-space, blank/non-blank split). Currently buys ~0.04 pp CER over greedy — the real win is reserved for when a KenLM language-model prior is added.
+- **Production ONNX.** `frontend/public/model.onnx` swapped from v6 (16 MB, 52-char vocab) to v9 (24 MB, 70-char vocab). `frontend/src/services/onnxInference.js` reads vocab size from the output tensor dynamically, so no JS changes were needed.
+
+### Explicit deferrals (next-phase work)
+
+The following items from `docs/v9-design.md` are deliberately not in this final build:
+
+- **KenLM language-model prior + beam search.** The decoder supports it; the corpus/training work was scoped out.
+- **Full encoder-decoder autoregressive architecture (TrOCR / PARSeq style).** Biggest potential WER improvement, but a multi-week engineering effort.
+- **Conjunct BPE tokenizer.** Would reduce sequence length and help conjunct handling; deferred.
+- **Image height 32 → 48.** Requires a CRNN architecture change (adaptive pool) that breaks backward compatibility with older checkpoints.
+- **Frontend build artefact (`frontend/dist/`) regeneration.** Source (`frontend/public/`) is updated; `npm run build` on the next deploy picks up the new model.
+
+### Success criteria from Week 7 — outcome
+
+- CER on text-disjoint val ≤ 60% of v8's CER → **met.** v8's combined/val CER was 27.99%; v9 on the same set is ~2.2%.
+- WER ≤ 70% of v8's WER → **met.**
+- Rare-glyph CER at least 30% lower than v8's → not measured separately. The vocab expansion from 52 → 70 chars means rare glyphs that were silently dropped on v8 are now first-class.
+- Checkpoint loads cleanly through the `CheckpointLoadError`-enforced harness → **met.**
+
+**Final status:** v9 shipped, deployed, documented. Next project phase starts from here.

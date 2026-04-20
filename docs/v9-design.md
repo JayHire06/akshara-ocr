@@ -1,8 +1,24 @@
 # Akshara-OCR v9 — "The Honest Leap"
 
-Status: **Design — scaffolding in progress**
-Target release: v9 checkpoint trained against the text-disjoint combined split.
-Author of this doc: generated 2026-04-13 during post-mortem of v8 evaluation.
+Status: **Shipped — v9 is the final build of this project for now.**
+This document was written as a design spec on 2026-04-13 during the v8 post-mortem. The pillars below were executed; the "Shipped results" block immediately under this header records how the trained and deployed model actually performs. Future work items still listed in this doc (KenLM LM prior, encoder-decoder architecture, font resynthesis) are deferred to a subsequent project phase.
+
+## Shipped results (2026-04-20)
+
+Production checkpoint: `model/checkpoints_v9/run_v9_20260420_011555/best_v9.pth`
+Exported ONNX: `frontend/public/model.onnx` (24 MB, 70-class output head)
+Training corpus: `data/combined/` (233K rows after the auto-labeled merge — 83K original combined + 150K auto-labeled).
+
+| Benchmark | CER | WER |
+|---|---|---|
+| Held-out auto-labeled val (8,365 rows, in-domain) | **2.24%** | **6.79%** |
+| `verified_test_labels.txt` (1,164 rows, Azure conf ≥ 0.95 gate) | **10.90%** | **31.62%** |
+
+For reference, the pre-auto v9 baseline on `verified_test_labels.txt` was CER 57.02% / WER 96.39%. The auto-labeled data merge alone drove CER to 18.41%; the bundled depth-6 + LR-scaling + auto-labeled-val retrain closed the remaining gap to 10.90%.
+
+Architectural parameters landed on: STN + MobileNet CNN + **6-layer Transformer encoder** (`d_model=256, heads=8, d_ff=1024`, pre-norm, GELU) + linear CTC head with **70-char vocab**. Parameters: 5.88M. Training: AdamW, OneCycleLR (`max_lr=2e-4, pct_start=0.20`), Focal CTC + label smoothing (ε=0.0), EMA weights (decay=0.999), batch size 320, early-stop patience 3 on auto-labeled held-out CER.
+
+The post-mortem-era transformer-layers cut from 6 → 3 was an overfitting mitigation appropriate for the 83K-row corpus of the time. With the 233K-row corpus now available, the design returned to 6 layers.
 
 ---
 

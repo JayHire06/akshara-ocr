@@ -15,4 +15,4 @@ Language-model components for post-OCR correction: the v7 spell-beam reranker an
 
 ## v9 outlook
 
-`model/ctc_decoder.py::decode_prefix_beam` is ready to take a language-model prior at the beam step. The planned integration is a KenLM ARPA trained on Hindi Wikipedia (now scraped as part of the auto-labeled pipeline) combined with this module's dictionary checks. Expected WER impact on the verified benchmark: a further 4–8 pp beyond the current 31.62%. Wiring deferred; see v9 design doc.
+v9 is the final shipped build of this project phase; the decoder path currently uses greedy CTC out of `model/ctc_decoder.py::decode_best_path`. A `decode_prefix_beam` implementation is landed and unit-tested but the language-model-prior integration (KenLM ARPA trained on Hindi Wikipedia — now scraped as part of the auto-labeled pipeline — combined with this module's dictionary checks) is **explicitly deferred to the next phase**. Expected WER impact when wired: a further 4–8 pp beyond v9's current 31.62% on `verified_test_labels.txt`. See `docs/v9-design.md` for the full deferred-work list.

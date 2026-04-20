@@ -42,10 +42,10 @@ See [`docs/v9-design.md`](../docs/v9-design.md) for full rationale.
 - Output: `log_softmax(dim=2)` — CTC-ready `(T, B, V)`
 - Parameters: ~3.51M at `N=3`, ~5.88M at `N=6`.
 
-Training history on `N`:
+Training history on `N` (final: `N=6`):
 - Initial design: N=6. First production run at N=6 overfit on the 83K-row pre-auto corpus.
 - Post-mortem revision: cut to N=3 + early stopping.
-- **Current (post-auto-labeled merge, 233K rows):** restored to N=6. Vocab expanded 52 → 70 chars (`data/combined/vocab.json` now mirrors the master `data/vocab.json`). Best checkpoint `run_v9_20260420_011555/best_v9.pth` measures CER 1.99% on held-out auto-labeled val, 10.90% on `verified_test_labels.txt`.
+- **Shipped build (post-auto-labeled merge, 233K rows):** `N=6`. Vocab expanded 52 → 70 chars (`data/combined/vocab.json` now mirrors the master `data/vocab.json`). Production checkpoint `run_v9_20260420_011555/best_v9.pth` measures CER 1.99% on held-out auto-labeled val, 10.90% on `verified_test_labels.txt`. This is the final build of v9 for this project phase.
 
 ## Loud loading — CheckpointLoadError
 
